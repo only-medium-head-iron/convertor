@@ -1,0 +1,194 @@
+package org.omit.send;
+
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.XmlUtil;
+import cn.hutool.extra.spring.SpringUtil;
+import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSON;
+import com.wtbh.wcoms.framework.common.exception.ServiceException;
+import com.wtbh.wcoms.module.cim.api.dto.UniteApiPushReqDTO;
+import com.wtbh.wcoms.module.cim.convert.BaseService;
+import com.wtbh.wcoms.module.cim.convert.Convertor;
+import com.wtbh.wcoms.module.cim.convert.constant.Const;
+import com.wtbh.wcoms.module.cim.convert.model.Context;
+import com.wtbh.wcoms.module.cim.convert.model.ContextHolder;
+import com.wtbh.wcoms.module.cim.convert.model.Pre;
+import com.wtbh.wcoms.module.cim.convert.model.Rsp;
+import com.wtbh.wcoms.module.cim.convert.rule.RuleMapping;
+import com.wtbh.wcoms.module.cim.convert.send.handler.DefaultSendHandler;
+import com.wtbh.wcoms.module.cim.dal.dataobject.apiapp.ApiAppDO;
+import com.wtbh.wcoms.module.cim.dal.dataobject.apiservice.ApiServiceDO;
+import com.wtbh.wcoms.module.cim.dal.mysql.apiservice.ApiMapper;
+import com.wtbh.wcoms.module.cim.service.apiapp.ApiAppService;
+import com.wtbh.wcoms.module.cim.service.apiservice.ApiServiceService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StopWatch;
+
+import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static com.wtbh.wcoms.framework.common.exception.enums.GlobalErrorCodeConstants.INTERNAL_SERVER_ERROR;
+import static com.wtbh.wcoms.framework.common.exception.util.ServiceExceptionUtil.exception;
+import static com.wtbh.wcoms.module.cim.enums.ErrorCodeConstants.*;
+
+/**
+ * @author hepenglin
+ * @since 2024-08-10 09:35
+ **/
+@Slf4j
+@Service
+public class SendService extends BaseService {
+
+    @Resource
+    private ApiAppService apiAppService;
+
+    @Resource
+    private ApiMapper apiMapper;
+
+    @Resource
+    private Convertor convertor;
+
+    @Resource
+    private ApiServiceService apiServiceService;
+
+    /**
+     * 处理统一API推送请求
+     * 该方法负责初始化上下文，根据上下文获取处理程序，并使用该处理程序处理上下文
+     * 如果处理过程中抛出异常，则会记录错误并设置响应码和响应信息
+     *
+     * @param uniteApiPushReqDTO 推送请求数据传输对象，包含推送所需的信息
+     */
+    public Rsp handle(UniteApiPushReqDTO uniteApiPushReqDTO) {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+        Rsp rsp = new Rsp();
+        Context context = new Context();
+        ContextHolder.set(context);
+        try {
+            initContext(context, uniteApiPushReqDTO);
+            SendHandler sendHandler = getHandler(context);
+            sendHandler.handle(context);
+            Map<String, Object> rspMap = parseRsp(context);
+            rsp = BeanUtil.toBean(rspMap, Rsp.class);
+        } catch (ServiceException e) {
+            log.error("请求失败：{}", e.getMessage(), e);
+            rsp.setCode(String.valueOf(e.getCode()));
+            rsp.setMessage(e.getMessage());
+            rsp.setOuterMessage(e.getMessage());
+        } catch (Exception e) {
+            log.error("请求失败：{}", e.getMessage(), e);
+            rsp.setCode(String.valueOf(INTERNAL_SERVER_ERROR.getCode()));
+            rsp.setMessage(e.toString());
+            rsp.setOuterMessage(INTERNAL_SERVER_ERROR.getMsg());
+        } finally {
+            context.setRsp(rsp);
+            recordLogAndClearContext(context);
+        }
+        stopWatch.stop();
+        log.info("处理耗时：{} ms", stopWatch.getTotalTimeMillis());
+        return rsp;
+    }
+
+    /**
+     * 根据上下文获取发送处理器
+     * 此方法旨在通过Spring容器获取特定的发送处理器Bean
+     * 如果无法找到对应的Bean，则抛出异常，指示应用程序处理逻辑出错
+     *
+     * @param context 上下文对象，用于获取API服务信息
+     * @return SendHandler 返回对应的发送处理器实例
+     */
+    private SendHandler getHandler(Context context) {
+        ApiServiceDO apiService = context.getApiService();
+        SendHandler sendHandler;
+        try {
+            String handlerBeanName = StrUtil.lowerFirst(apiService.getHandler());
+            sendHandler = SpringUtil.getBean(handlerBeanName);
+        } catch (NoSuchBeanDefinitionException e) {
+            if (context.isInternalRetry()) {
+                // TODO 重试临时添加，后续迁移需要删除
+                return SpringUtil.getBean(DefaultSendHandler.class);
+            }
+            log.error("没有找到对应的处理器：{}", apiService.getHandler());
+            throw exception(APP_HANDLER_ERROR);
+        }
+        return sendHandler;
+    }
+
+    /**
+     * 初始化上下文
+     * 此方法用于初始化上下文对象，设置请求参数、API应用和API服务信息
+     *
+     * @param context 上下文对象，用于存储请求参数、API应用和API服务信息
+     * @param uniteApiPushReqDTO 推送请求数据传输对象，包含推送所需的信息
+     */
+    private void initContext(Context context, UniteApiPushReqDTO uniteApiPushReqDTO) {
+        Pre pre = new Pre();
+        pre.setSelfCode(uniteApiPushReqDTO.getSelfCode());
+        pre.setSelfValue(uniteApiPushReqDTO.getSelfValue());
+        pre.setOuterNo(uniteApiPushReqDTO.getOuterBusinessNo());
+        context.setPre(pre);
+        context.setCallType(Const.CallType.SEND);
+        context.setDirectCall(uniteApiPushReqDTO.isDirectCall());
+        context.setRetryParams(JSON.toJSONString(uniteApiPushReqDTO));
+        Map<String, Object> params = BeanUtil.beanToMap(uniteApiPushReqDTO);
+        // TODO 在规则里面解析，避免解析两次
+        params.put("reqData", JSONUtil.parseObj(uniteApiPushReqDTO.getReqData(), true));
+        context.setParams(params);
+        ApiAppDO apiApp = apiAppService.getApiAppInfoBySelfCode(uniteApiPushReqDTO.getSelfCode());
+        if (null == apiApp) {
+            throw exception(APP_CODE_NOT_EXIST, uniteApiPushReqDTO.getSelfCode());
+        }
+        context.setApiApp(apiApp);
+        // 对应接口处理
+        ApiServiceDO apiService = apiServiceService.getApiServiceByServiceType(apiApp.getId(), uniteApiPushReqDTO.getServiceType());
+        if (null == apiService) {
+            throw exception(API_SERVICE_NOT_EXISTS);
+        }
+        context.setApiService(apiService);
+        context.setRuleId(apiApp.getAppCode() + StrUtil.DASHED + apiService.getServiceCode());
+        context.setInternalRetry(uniteApiPushReqDTO.isInternalRetry());
+        if (context.isInternalRetry()) {
+            String reqMsg = uniteApiPushReqDTO.getReqMsg();
+            context.setReqMsg(reqMsg);
+            if (Const.MsgType.FORM == apiService.getMsgType()) {
+                context.setTarget(JSONUtil.parseObj(reqMsg));
+            }
+        }
+    }
+
+    /**
+     * 解析响应消息
+     * 此方法用于解析响应消息，根据API服务的消息类型（XML或JSON）进行解析
+     *
+     * @param context 上下文对象，用于获取API服务的消息类型
+     * @return Map<String, Object> 解析后的响应消息，以键值对的形式返回
+     */
+    public Map<String, Object> parseRsp(Context context) {
+        List<RuleMapping> rules = apiMapper.getMappingRulesByRuleId(Const.RuleType.RSP, context.getRuleId());
+        if (CollUtil.isEmpty(rules)) {
+            log.warn("没有找到响应映射规则：{}", context.getRuleId());
+            return new HashMap<>(16);
+        }
+        ApiServiceDO apiService = context.getApiService();
+        int msgType = apiService.getMsgType();
+        Map<String, Object> rspMap;
+        String rspMsg = context.getRspMsg();
+        try {
+            if (msgType == Const.MsgType.XML) {
+                rspMap = XmlUtil.xmlToMap(rspMsg);
+            } else {
+                rspMap = JSONUtil.parseObj(rspMsg);
+            }
+        } catch (Exception e) {
+            log.error("响应报文格式不正确：{}", e.getMessage(), e);
+            throw new ServiceException("响应报文格式不正确");
+        }
+        return convertor.parseMappingRules(rspMap, rules);
+    }
+}
