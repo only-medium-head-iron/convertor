@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.demacia.Convertor;
 import org.demacia.domain.Context;
 import org.demacia.step.Step;
+import org.demacia.util.SignUtil;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -190,7 +191,7 @@ public abstract class AbstractSendHandler implements SendHandler {
         requestHeaders.put("sign_method", "md5");
         requestHeaders.put("customerId", "mockCustomerId");
         requestHeaders.put("timestamp", "2024-08-15 20:22:28");
-        String sign = SignatureUtil.signTopRequest(requestHeaders, reqMsg, "19dc28095568fe456d65079a0972abe9", "md5");
+        String sign = SignUtil.signTopRequest(requestHeaders, reqMsg, "19dc28095568fe456d65079a0972abe9", "md5");
         requestHeaders.put("sign", sign);
         String query = URLUtil.buildQuery(requestHeaders, Charset.defaultCharset());
         String url = "http://qimen.api.taobao.com/top/router/qmtest" + "?" + query;

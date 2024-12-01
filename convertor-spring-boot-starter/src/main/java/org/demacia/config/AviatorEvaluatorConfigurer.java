@@ -28,6 +28,7 @@ public class AviatorEvaluatorConfigurer {
         AviatorEvaluator.addStaticFunctions("LocalDateTimeUtil", LocalDateTimeUtil.class);
         AviatorEvaluator.addStaticFunctions("DateUtil", DateUtil.class);
         AviatorEvaluator.addStaticFunctions("IdUtil", IdUtil.class);
+        IdUtil.fastSimpleUUID();
         AviatorEvaluator.addStaticFunctions("StrUtil", StrUtil.class);
         AviatorEvaluator.addStaticFunctions("ObjectUtil", ObjectUtil.class);
         AviatorEvaluator.addStaticFunctions("NumberUtil", NumberUtil.class);

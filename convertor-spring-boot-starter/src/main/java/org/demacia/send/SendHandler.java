@@ -1,6 +1,6 @@
 package org.demacia.send;
 
-import com.wtbh.wcoms.module.cim.convert.model.Context;
+import org.demacia.domain.Context;
 
 /**
  * @author hepenglin

@@ -9,7 +9,20 @@ import cn.hutool.extra.spring.SpringUtil;
 import com.googlecode.aviator.AviatorEvaluator;
 
 import lombok.extern.slf4j.Slf4j;
+import org.demacia.constant.Const;
+import org.demacia.domain.Context;
+import org.demacia.domain.ContextHolder;
+import org.demacia.exception.ConvertException;
+import org.demacia.merge.MergeProcessor;
+import org.demacia.rule.RuleConvert;
+import org.demacia.rule.RuleMapping;
+import org.demacia.rule.RuleMerge;
+import org.demacia.rule.RuleValidate;
+import org.demacia.util.StrFormatter;
+import org.demacia.util.StrPool;
 import org.demacia.validate.ValidateProcessor;
+import org.demacia.value.ValueStrategy;
+import org.demacia.value.ValueStrategyFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.stereotype.Service;
 
@@ -159,7 +172,7 @@ public class Convertor {
             Object isPass = aviatorExecute(ruleValidate, expression, sourceMap);
             if (Boolean.FALSE.equals(isPass)) {
                 String message = ruleValidate.getMessage();
-                throw new ConvertException(StrUtil.isBlank(message) ? "不满足条件" + expression : StringFormatter.format(message, sourceMap));
+                throw new ConvertException(StrUtil.isBlank(message) ? "不满足条件" + expression : StrFormatter.format(message, sourceMap));
             }
         }
     }

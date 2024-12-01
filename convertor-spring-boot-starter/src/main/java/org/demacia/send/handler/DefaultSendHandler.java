@@ -1,6 +1,6 @@
 package org.demacia.send.handler;
 
-import com.wtbh.wcoms.module.cim.convert.send.AbstractSendHandler;
+import org.demacia.send.AbstractSendHandler;
 import org.springframework.stereotype.Component;
 
 /**
