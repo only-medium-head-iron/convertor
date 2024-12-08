@@ -8,7 +8,7 @@ public class RuleStep {
 
     private Long id;
 
-    private String ruleId;
+    private String ruleCode;
 
     private String condition;
 

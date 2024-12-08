@@ -17,11 +17,11 @@ public class RuleValidate {
     private Long id;
 
     /**
-     * 规则的ID，用于标识一条规则。
+     * 规则编码。
      * <p>
-     * 该ID是规则的标识符。
+     * 规则编码。
      */
-    private String ruleId;
+    private String ruleCode;
 
     /**
      * 规则的条件，描述了规则执行的前提条件。

@@ -5,7 +5,7 @@ import com.googlecode.aviator.AviatorEvaluator;
 
 import lombok.extern.slf4j.Slf4j;
 import org.demacia.enums.ValueType;
-import org.demacia.exception.ConvertException;
+import org.demacia.ConvertException.ConvertException;
 import org.demacia.rule.RuleMapping;
 import org.springframework.stereotype.Service;
 

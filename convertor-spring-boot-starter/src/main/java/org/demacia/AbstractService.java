@@ -1,6 +1,13 @@
 package org.demacia;
 
 import lombok.extern.slf4j.Slf4j;
+import org.demacia.domain.ApiApp;
+import org.demacia.domain.Context;
+import org.demacia.domain.ContextHolder;
+import org.demacia.domain.Log;
+import org.demacia.mapper.LogMapper;
+
+import javax.annotation.Resource;
 
 
 /**
@@ -10,19 +17,24 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class AbstractService {
 
-//    @Resource
-//    private AccessLogService accessLogService;
-//
-//    public void recordLogAndClearContext(Context context) {
-//        if (!context.isDirectCall()) {
-//            return;
-//        }
-//        try {
-//            accessLogService.createLog(context);
-//        } catch (Exception e) {
-//            log.error("接口日志落库失败：{}", e.getMessage(), e);
-//        } finally {
-//            ContextHolder.clear();
-//        }
-//    }
+    @Resource
+    private LogMapper logMapper;
+
+    public void recordLogAndClearContext(Context context) {
+        try {
+            Log log = buildLog(context);
+            logMapper.recordLog(log);
+        } catch (Exception e) {
+            log.error("接口日志落库失败：{}", e.getMessage(), e);
+        } finally {
+            ContextHolder.clear();
+        }
+    }
+
+    private Log buildLog(Context context) {
+        Log log = new Log();
+        ApiApp apiApp = context.getApiApp();
+        log.setAppName(apiApp.getAppName());
+        return log;
+    }
 }

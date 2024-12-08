@@ -9,6 +9,7 @@ import cn.hutool.extra.spring.SpringUtil;
 import com.googlecode.aviator.AviatorEvaluator;
 
 import lombok.extern.slf4j.Slf4j;
+import org.demacia.mapper.RuleMapper;
 import org.demacia.constant.Const;
 import org.demacia.domain.Context;
 import org.demacia.domain.ContextHolder;
@@ -40,35 +41,35 @@ import java.util.stream.Collectors;
 public class Convertor {
 
     @Resource
-    private ApiMapper apiMapper;
+    private RuleMapper ruleMapper;
 
     /**
      * 根据规则ID和参数将字符串转换为指定类型的对象
      * 此方法首先使用规则ID和参数将字符串转换为一个对象，然后将该对象转换为由clazz参数指定的类型
      *
-     * @param ruleId 规则ID，用于确定转换规则
+     * @param ruleCode 规则ID，用于确定转换规则
      * @param params 转换过程中使用的参数
      * @param clazz 要转换的目标类型
      * @param <T> 泛型参数，表示转换后对象的类型
      * @return 转换后的对象
      */
-    public <T> T convert(String ruleId, Map<String, Object> params, Class<T> clazz) {
-        Object object = convert(ruleId, params);
+    public <T> T convert(String ruleCode, Map<String, Object> params, Class<T> clazz) {
+        Object object = convert(ruleCode, params);
         return BeanUtil.toBean(object, clazz);
     }
 
     /**
      * 根据规则ID和参数将数据转换为相应的对象格式
      *
-     * @param ruleId 规则ID，用于确定转换规则
+     * @param ruleCode 规则ID，用于确定转换规则
      * @param params 输入参数映射，包含转换所需的数据
      * @return 转换后的对象，如果没有相应的转换规则或转换失败，则返回null
      */
-    public Object convert(String ruleId, Map<String, Object> params) {
+    public Object convert(String ruleCode, Map<String, Object> params) {
         // 获取转换规则
-        List<RuleConvert> ruleConverts = apiMapper.getConvertRules(ruleId);
+        List<RuleConvert> ruleConverts = ruleMapper.getConvertRules(ruleCode);
         if (CollUtil.isEmpty(ruleConverts)) {
-            log.warn("没有找到转换规则：{}", ruleId);
+            log.warn("没有找到转换规则：{}", ruleCode);
             return null;
         }
 
@@ -92,10 +93,10 @@ public class Convertor {
                 .filter(ruleConvert -> ruleConvert.getParentId() == 0)
                 .collect(Collectors.toList());
         List<String> convertIds = ruleConverts.stream().map(ruleConvert -> String.valueOf(ruleConvert.getId())).collect(Collectors.toList());
-        List<RuleMapping> ruleMappings = apiMapper.getMappingRules(Const.RuleType.DTO, convertIds);
-        List<RuleMerge> ruleMerges = apiMapper.getMergeRules(convertIds);
-        Map<String, List<RuleMapping>> groupedMappingRules = ruleMappings.stream().collect(Collectors.groupingBy(RuleMapping::getRuleId));
-        Map<String, List<RuleMerge>> groupedMergeRules = ruleMerges.stream().collect(Collectors.groupingBy(RuleMerge::getRuleId));
+        List<RuleMapping> ruleMappings = ruleMapper.getMappingRules(Const.RuleType.DTO, convertIds);
+        List<RuleMerge> ruleMerges = ruleMapper.getMergeRules(convertIds);
+        Map<String, List<RuleMapping>> groupedMappingRules = ruleMappings.stream().collect(Collectors.groupingBy(RuleMapping::getRuleCode));
+        Map<String, List<RuleMerge>> groupedMergeRules = ruleMerges.stream().collect(Collectors.groupingBy(RuleMerge::getRuleCode));
         for (RuleConvert parentRuleConvert : parentRuleConverts) {
             if (mismatchConvertCondition(parentRuleConvert, params)) {
                 // 条件不为空且不满足条件
@@ -104,7 +105,7 @@ public class Convertor {
             parseConvertRule(groupedConvertRules, groupedMappingRules, groupedMergeRules, populatedMap, parentRuleConvert, params, params);
         }
         Object object = BeanUtil.toBean(populatedMap, clazz);
-        parseValidateRules(ruleId, object);
+        parseValidateRules(ruleCode, object);
         return object;
     }
 
@@ -133,14 +134,14 @@ public class Convertor {
     /**
      * 校验给定规则ID下的数据是否满足设定的校验规则
      *
-     * @param ruleId 规则ID，用于识别具体的校验规则
+     * @param ruleCode 规则ID，用于识别具体的校验规则
      * @param object 转换后对象
      */
-    private void parseValidateRules(String ruleId, Object object) {
+    private void parseValidateRules(String ruleCode, Object object) {
         // 获取校验规则
-        List<RuleValidate> ruleValidates = apiMapper.getValidateRules(ruleId);
+        List<RuleValidate> ruleValidates = ruleMapper.getValidateRules(ruleCode);
         if (CollUtil.isEmpty(ruleValidates)) {
-            log.warn("没有找到校验规则：{}", ruleId);
+            log.warn("没有找到校验规则：{}", ruleCode);
             return;
         }
         for (RuleValidate ruleValidate : ruleValidates) {
@@ -219,7 +220,7 @@ public class Convertor {
             try {
                 Map<String, Object> executeMap = new HashMap<>(params);
                 executeMap.put("SQL", script);
-                apiMapper.execute(executeMap);
+                ruleMapper.execute(executeMap);
             } catch (Exception e) {
                 log.error("执行SQL失败：{}", e.getMessage(), e);
                 throw new ConvertException("执行SQL失败");
@@ -541,7 +542,7 @@ public class Convertor {
         Object isPass = aviatorExecute(ruleMapping, expression, sourceMap);
         if (!Boolean.TRUE.equals(isPass)) {
             String message = ruleMapping.getMessage();
-            throw new ConvertException(StrUtil.isBlank(message) ? "不满足条件" + expression : StringFormatter.format(message, sourceMap));
+            throw new ConvertException(StrUtil.isBlank(message) ? "不满足条件" + expression : StrFormatter.format(message, sourceMap));
         }
     }
 
@@ -552,7 +553,7 @@ public class Convertor {
      */
     private void validateRequiredFields(Map<String, Object> sourceMap, RuleMapping rule) {
         if (Const.Requirement.REQUIRED.equals(rule.getRequired())) {
-            String message = StrUtil.isBlank(rule.getMessage()) ? rule.getTarget() + "字段为空，但字段配置为必填" : StringFormatter.format(rule.getMessage(), sourceMap);
+            String message = StrUtil.isBlank(rule.getMessage()) ? rule.getTarget() + "字段为空，但字段配置为必填" : StrFormatter.format(rule.getMessage(), sourceMap);
             throw new ConvertException(message);
         }
     }
@@ -560,7 +561,7 @@ public class Convertor {
     private void validateRequiredFields(List<RuleMapping> rules, Map<String, Object> sourceMap, Map<String, Object> targetMap) {
         rules.stream().filter(rule -> Const.Requirement.REQUIRED.equals(rule.getRequired())).forEach(rule -> {
             String target = StrUtil.replace(rule.getTarget(), "#", "");
-            String message = StrUtil.isBlank(rule.getMessage()) ? rule.getTarget() + "字段为空，但字段配置为必填" : StringFormatter.format(rule.getMessage(), sourceMap);
+            String message = StrUtil.isBlank(rule.getMessage()) ? rule.getTarget() + "字段为空，但字段配置为必填" : StrFormatter.format(rule.getMessage(), sourceMap);
             if (!targetMap.containsKey(target)) {
                 throw new ConvertException(message);
             }

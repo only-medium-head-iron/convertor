@@ -29,11 +29,11 @@ public class RuleConvert {
     private Long parentId;
 
     /**
-     * 规则的ID，用于唯一标识一条规则。
+     * 规则编码。
      * <p>
-     * 该ID是规则的唯一标识符。
+     * 规则编码。
      */
-    private String ruleId;
+    private String ruleCode;
 
     /**
      * 规则名称。

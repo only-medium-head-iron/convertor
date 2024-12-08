@@ -11,13 +11,17 @@ import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.demacia.Convertor;
+import org.demacia.mapper.RuleMapper;
+import org.demacia.constant.Const;
+import org.demacia.domain.ApiApp;
+import org.demacia.domain.ApiService;
 import org.demacia.domain.Context;
+import org.demacia.rule.RuleMapping;
 import org.demacia.step.Step;
-import org.demacia.util.SignUtil;
+import org.demacia.util.MessageFormatter;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -32,7 +36,7 @@ public abstract class AbstractSendHandler implements SendHandler {
     private Convertor convertor;
 
     @Resource
-    private ApiMapper apiMapper;
+    private RuleMapper ruleMapper;
 
     private LinkedList<Step> steps;
 
@@ -47,7 +51,7 @@ public abstract class AbstractSendHandler implements SendHandler {
         beforeConvert(context);
 
         // 通过字段映射方式转换报文转换
-        Object object = convertor.convert(context.getRuleId(), BeanUtil.beanToMap(context));
+        Object object = convertor.convert(context.getRuleCode(), BeanUtil.beanToMap(context));
 
         // 根据配置的消息格式格式化请求消息
         formatRequestMessage(context, object);
@@ -71,7 +75,7 @@ public abstract class AbstractSendHandler implements SendHandler {
         // 可以替换成 ObjectMapper.convertValue(object, Map.class)，进行逐级转换
         Map<String, Object> parseResult = BeanUtil.beanToMap(object);
         context.setTarget(parseResult);
-        ApiServiceDO apiService = context.getApiService();
+        ApiService apiService = context.getApiService();
         int msgType = apiService.getMsgType();
         String reqMsg = MessageFormatter.determineMsgFormat(parseResult, msgType);
         context.setReqMsg(reqMsg);
@@ -82,7 +86,7 @@ public abstract class AbstractSendHandler implements SendHandler {
      */
     @PostConstruct
     public void init() {
-        this.steps = CollUtil.newLinkedList(sendMapperStep, ownerStep, warehouseStep);
+        this.steps = CollUtil.newLinkedList();
     }
 
     /**
@@ -108,9 +112,9 @@ public abstract class AbstractSendHandler implements SendHandler {
         Map<String, Object> pathParams = buildPathParams(context);
         Map<String, String> headers = buildHeaders(context);
         String query = URLUtil.buildQuery(pathParams, StandardCharsets.UTF_8);
-        ApiAppDO apiApp = context.getApiApp();
+        ApiApp apiApp = context.getApiApp();
         String pushUrl = apiApp.getPushUrl();
-        ApiServiceDO apiService = context.getApiService();
+        ApiService apiService = context.getApiService();
         String path = apiService.getPath();
         path = StrUtil.isBlank(path) ? "" : path;
         String url = pushUrl + path + (StrUtil.isBlank(query) ? "" : "?" + query);
@@ -145,14 +149,14 @@ public abstract class AbstractSendHandler implements SendHandler {
      * @return Map<String, Object> 返回构建的路径参数，如果无规则，则返回空地图
      */
     public Map<String, Object> buildPathParams(Context context) {
-        ApiAppDO apiApp = context.getApiApp();
-        List<RuleMapping> rules = apiMapper.getMappingRulesByRuleId(Const.RuleType.URL, apiApp.getAppCode());
+        ApiApp apiApp = context.getApiApp();
+        List<RuleMapping> rules = ruleMapper.getMappingRulesByRuleCode(Const.RuleType.URL, apiApp.getAppCode());
         if (CollUtil.isEmpty(rules)) {
             log.info("没有找到路径映射规则：{}", apiApp.getAppCode());
             return MapUtil.empty();
         }
         LinkedHashMap<String, Object> pathParams = new LinkedHashMap<>(16);
-        context.setPathParams(pathParams);
+        context.setQueryParams(pathParams);
         convertor.parseMappingRules(BeanUtil.beanToMap(context), pathParams, rules);
         return pathParams;
     }
@@ -167,8 +171,8 @@ public abstract class AbstractSendHandler implements SendHandler {
      * @return Map<String, Object> 返回构建的请求头，如果无规则，则返回空
      */
     public Map<String, String> buildHeaders(Context context) {
-        ApiAppDO apiApp = context.getApiApp();
-        List<RuleMapping> rules = apiMapper.getMappingRulesByRuleId(Const.RuleType.RHD, apiApp.getAppCode());
+        ApiApp apiApp = context.getApiApp();
+        List<RuleMapping> rules = ruleMapper.getMappingRulesByRuleCode(Const.RuleType.RHD, apiApp.getAppCode());
         if (CollUtil.isEmpty(rules)) {
             log.info("没有找到请求头映射规则：{}", apiApp.getAppCode());
             return MapUtil.empty();
@@ -179,23 +183,5 @@ public abstract class AbstractSendHandler implements SendHandler {
         targetMap.forEach((k, v) -> headers.put(k, v != null ? v.toString() : null));
         context.setHeaders(headers);
         return headers;
-    }
-
-    public static void main(String[] args) throws Exception {
-        String reqMsg = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><request><deliveryOrder><orderType>{\"orderType\": \"JYCK\"}</orderType><orderConfirmTime>2024-08-21 14:54:08</orderConfirmTime><deliveryOrderCode>CKLQ20240804930</deliveryOrderCode><confirmType>0</confirmType><warehouseCode>QMTEST001</warehouseCode><deliveryOrderId>OB2024082100004441907</deliveryOrderId><status>DELIVERED</status></deliveryOrder></request>";
-        Map<String, String> requestHeaders = new HashMap<>(16);
-        requestHeaders.put("app_key", "34295048");
-        requestHeaders.put("method", "taobao.qimen.deliveryorder.confirm");
-        requestHeaders.put("v", "3.0");
-        requestHeaders.put("format", "xml");
-        requestHeaders.put("sign_method", "md5");
-        requestHeaders.put("customerId", "mockCustomerId");
-        requestHeaders.put("timestamp", "2024-08-15 20:22:28");
-        String sign = SignUtil.signTopRequest(requestHeaders, reqMsg, "19dc28095568fe456d65079a0972abe9", "md5");
-        requestHeaders.put("sign", sign);
-        String query = URLUtil.buildQuery(requestHeaders, Charset.defaultCharset());
-        String url = "http://qimen.api.taobao.com/top/router/qmtest" + "?" + query;
-        String rspMsg = HttpUtil.post(url, reqMsg);
-        System.out.println(rspMsg);
     }
 }

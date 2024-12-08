@@ -42,14 +42,14 @@ public class Context {
      * <p>
      * 用于标识当前上下文处理所依据的业务规则。
      */
-    private String ruleId;
+    private String ruleCode;
 
     /**
      * 路径参数。
      * <p>
      * 采用 Map 形式存储，便于灵活处理各类请求参数。
      */
-    private Map<String, ?> pathParams;
+    private Map<String, ?> queryParams;
 
     /**
      * 请求头。
@@ -117,7 +117,7 @@ public class Context {
     /**
      * 临时数据。
      * <p>
-     * target中包含 #号时，将当前值放入tempData
+     * target中包含 #号时，将当前值放入temp
      */
     private Map<String, Object> temp = new HashMap<>();
 
@@ -128,45 +128,17 @@ public class Context {
      */
     private LinkedList<Object> parseResults = new LinkedList<>();
 
-//    /**
-//     * API 应用信息。
-//     * <p>
-//     * 存储当前请求对应 API 应用的详细信息。
-//     */
-//    private ApiAppDO apiApp;
-//
-//    /**
-//     * API 服务信息。
-//     * <p>
-//     * 存储当前请求对应 API 服务的详细信息。
-//     */
-//    private ApiServiceDO apiService;
-//
-//    /**
-//     * 业主信息。
-//     * <p>
-//     * 存储与当前请求相关的业主信息。
-//     */
-//    private OwnerRespDTO owner;
-//
-//    /**
-//     * 仓库信息。
-//     * <p>
-//     * 存储与当前请求相关的仓库信息。
-//     */
-//    private WarehouseRespDTO warehouse;
-//
-//    /**
-//     * Mapper 头部信息。
-//     * <p>
-//     * 用于 API 映射处理中的头部信息。
-//     */
-//    private MapperHeaderDO mapperHeader;
-//
-//    /**
-//     * Mapper 详情信息。
-//     * <p>
-//     * 用于 API 映射处理中的详细信息。
-//     */
-//    private MapperDetailDO mapperDetail;
+    /**
+     * API 应用信息。
+     * <p>
+     * 存储当前请求对应 API 应用的详细信息。
+     */
+    private ApiApp apiApp;
+
+    /**
+     * API 服务信息。
+     * <p>
+     * 存储当前请求对应 API 服务的详细信息。
+     */
+    private ApiService apiService;
 }

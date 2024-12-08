@@ -71,7 +71,7 @@ public class Const {
      * 签名方式。
      */
     public static class SignMethod {
-        public static final int NOT_REQUIRED = 0;
+        public static final String NOT_REQUIRED = "";
     }
 
     /**

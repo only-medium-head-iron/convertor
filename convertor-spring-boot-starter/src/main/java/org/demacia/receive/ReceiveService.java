@@ -9,12 +9,17 @@ import cn.hutool.json.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.demacia.AbstractService;
 import org.demacia.Convertor;
+import org.demacia.mapper.ApiAppMapper;
+import org.demacia.mapper.ApiServiceMapper;
+import org.demacia.mapper.RuleMapper;
 import org.demacia.constant.Const;
 import org.demacia.enums.ResultCode;
-import org.demacia.exception.ConvertException;
 import org.demacia.domain.*;
+import org.demacia.exception.ConvertException;
 import org.demacia.rule.RuleMapping;
+import org.demacia.util.JsonUtil;
 import org.demacia.util.MessageFormatter;
+import org.demacia.validate.RequestValidator;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
@@ -36,13 +41,13 @@ public class ReceiveService extends AbstractService {
     private Convertor convertor;
 
     @Resource
-    private ApiMapper apiMapper;
+    private RuleMapper ruleMapper;
 
     @Resource
-    private ApiAppService apiAppService;
+    private ApiAppMapper apiAppMapper;
 
     @Resource
-    private ApiServiceService apiServiceService;
+    private ApiServiceMapper apiServiceMapper;
 
     /**
      * 处理外部应用的请求
@@ -73,7 +78,7 @@ public class ReceiveService extends AbstractService {
             rsp.setOuterMessage(e.getMessage());
         } catch (Exception e) {
             log.error("外部请求处理失败：{}", e.getMessage(), e);
-            rsp.setCode("");
+            rsp.setCode(ResultCode.FAILURE.getCode());
             rsp.setMessage(e.toString());
             rsp.setOuterMessage("系统异常");
         } finally {
@@ -106,11 +111,11 @@ public class ReceiveService extends AbstractService {
      * @return 返回获取到的接收处理程序实例
      */
     private ReceiveHandler determineWhichHandler(Context context) {
-//        ApiServiceDO apiService = context.getApiService();
-        MethodEnum methodEnum = MethodEnum.valueOf(context.getRuleId());
+        ApiService apiService = context.getApiService();
+        String handlerBeanName = apiService.getHandler();
         ReceiveHandler receiveHandler;
         try {
-            receiveHandler = SpringUtil.getBean(StrUtil.lowerFirst(methodEnum.getHandler()));
+            receiveHandler = SpringUtil.getBean(StrUtil.lowerFirst(handlerBeanName));
         } catch (NoSuchBeanDefinitionException e) {
             throw new ConvertException("没有找到对应的处理器");
         }
@@ -127,7 +132,7 @@ public class ReceiveService extends AbstractService {
     public void initContext(Context context, ReceiveRequest receiveRequest) {
         context.setCallType(Const.CallType.RECEIVE);
         context.setDirectCall(receiveRequest.isDirectCall());
-        context.setRetryParams(JSON.toJSONString(receiveRequest));
+        context.setRetryParams(JsonUtil.toJson(receiveRequest));
         String reqMsg = receiveRequest.getReqMsg();
         String appCode = receiveRequest.getAppCode();
         BeanUtil.copyProperties(receiveRequest, context);
@@ -138,7 +143,7 @@ public class ReceiveService extends AbstractService {
         if (StrUtil.isBlank(serviceCode)) {
             throw new ConvertException("serviceCode服务编码不能为空");
         }
-        context.setRuleId(appCode + StrUtil.DASHED + serviceCode);
+        context.setRuleCode(appCode + StrUtil.DASHED + serviceCode);
         setPre(context);
         setApiService(context, serviceCode);
     }
@@ -151,7 +156,7 @@ public class ReceiveService extends AbstractService {
      * @param appCode 应用代码，用于查询规则映射
      */
     private void setReq(Context context, String appCode) {
-        List<RuleMapping> reqRules = apiMapper.getMappingRulesByRuleId(Const.RuleType.REQ, appCode);
+        List<RuleMapping> reqRules = ruleMapper.getMappingRulesByRuleCode(Const.RuleType.REQ, appCode);
         if (CollUtil.isEmpty(reqRules)) {
             log.warn("没有找到请求映射规则：{}", appCode);
             return;
@@ -168,9 +173,9 @@ public class ReceiveService extends AbstractService {
      * @param context 上下文对象，用于传递请求过程中的数据
      */
     private void setPre(Context context) {
-        List<RuleMapping> preRules = apiMapper.getMappingRulesByRuleId(Const.RuleType.PRE, context.getRuleId());
+        List<RuleMapping> preRules = ruleMapper.getMappingRulesByRuleCode(Const.RuleType.PRE, context.getRuleCode());
         if (CollUtil.isEmpty(preRules)) {
-            log.warn("没有找到前置映射规则：{}", context.getRuleId());
+            log.warn("没有找到前置映射规则：{}", context.getRuleCode());
             return;
         }
         LinkedHashMap<String, Object> preMap = new LinkedHashMap<>(16);
@@ -214,10 +219,10 @@ public class ReceiveService extends AbstractService {
      * 否则将查询到的服务信息设置到上下文对象中，供后续处理使用
      */
     private void setApiService(Context context, String serviceCode) {
-        ApiAppDO apiApp = context.getApiApp();
-        ApiServiceDO apiService = apiServiceService.getApiServiceInfo(apiApp.getId(), serviceCode);
+        ApiApp apiApp = context.getApiApp();
+        ApiService apiService = apiServiceMapper.getApiService(apiApp.getId(), serviceCode);
         if (null == apiService) {
-            throw exception(API_SERVICE_NOT_EXISTS, serviceCode);
+            throw new ConvertException("");
         }
         context.setApiService(apiService);
     }
@@ -229,9 +234,9 @@ public class ReceiveService extends AbstractService {
      * @param appCode 应用代码，用于唯一标识一个应用
      */
     private void setApiApp(Context context, String appCode) {
-        ApiAppDO apiApp = apiAppService.getByAppCode(appCode);
+        ApiApp apiApp = apiAppMapper.getApiApp(appCode);
         if (null == apiApp) {
-            throw exception(APP_CODE_NOT_EXIST, appCode);
+            throw new ConvertException("");
         }
         context.setApiApp(apiApp);
     }
@@ -244,10 +249,10 @@ public class ReceiveService extends AbstractService {
      * @return 解析后的响应参数，以Map形式返回
      */
     public Map<String, Object> parseRsp(Context context, Rsp rsp) {
-        List<RuleMapping> rules = apiMapper.getMappingRulesByRuleId(Const.RuleType.RSP, context.getRuleId());
+        List<RuleMapping> rules = ruleMapper.getMappingRulesByRuleCode(Const.RuleType.RSP, context.getRuleCode());
         Map<String, Object> rspMap = BeanUtil.beanToMap(rsp);
         if (CollUtil.isEmpty(rules)) {
-            log.warn("没有找到对应的响应映射规则：{}，返回默认响应", context.getRuleId());
+            log.warn("没有找到对应的响应映射规则：{}，返回默认响应", context.getRuleCode());
             // 返回默认响应
             Req req = context.getReq();
             if (req != null && Const.MsgFormat.XML.equals(req.getFormat())) {
@@ -274,20 +279,20 @@ public class ReceiveService extends AbstractService {
             return;
         }
         Req req = context.getReq();
-        ApiAppDO apiApp = context.getApiApp();
+        ApiApp apiApp = context.getApiApp();
         RequestValidator.validateRepeatRequest(req.getReqId(), apiApp.getValidTime());
-        RequestValidator.validateTimeLimitation(req.getTimestamp(), apiApp.getValidTime());
+        RequestValidator.validateTimeExpired(req.getTimestamp(), apiApp.getValidTime());
         // 是否要签名验证
-        int signMethod = apiApp.getSignMethod();
-        if (signMethod == Const.SignMethod.NOT_REQUIRED) {
+        String signMethod = apiApp.getSignMethod();
+        if (Const.SignMethod.NOT_REQUIRED.equals(signMethod)) {
             return;
         }
         String rcvSign = req.getRcvSign();
         String genSign = req.getGenSign();
         if (!StrUtil.equals(rcvSign, genSign)) {
             log.error("签名验证失败，rcvSign: {}, genSign: {}, pathParams: {}, headers: {}, reqMsg: {}",
-                    rcvSign, genSign, context.getPathParams(), context.getHeaders(), context.getReqMsg());
-            throw exception(APP_SIGNATURE_ERROR);
+                    rcvSign, genSign, context.getQueryParams(), context.getHeaders(), context.getReqMsg());
+            throw new ConvertException("");
         }
     }
 }

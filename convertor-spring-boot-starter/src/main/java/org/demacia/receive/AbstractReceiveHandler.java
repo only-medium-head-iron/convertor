@@ -33,7 +33,7 @@ public abstract class AbstractReceiveHandler implements ReceiveHandler {
     @Override
     public Object handle(Context context) {
         beforeConvert(context);
-        Object object = convertor.convert(context.getRuleId(), BeanUtil.beanToMap(context));
+        Object object = convertor.convert(context.getRuleCode(), BeanUtil.beanToMap(context));
         afterConvert(object);
         return object;
     }

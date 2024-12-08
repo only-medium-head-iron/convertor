@@ -5,7 +5,7 @@ import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.demacia.enums.ValueType;
-import org.demacia.exception.ConvertException;
+import org.demacia.ConvertException.ConvertException;
 import org.demacia.rule.RuleMapping;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +24,7 @@ import java.util.Map;
 public class SqlValueStrategy implements ValueStrategy {
 
     @Resource
-    private ApiMapper apiMapper;
+    private RuleMapper apiMapper;
 
     @Override
     public Object getValue(Map<String, Object> sourceMap, RuleMapping rule) {

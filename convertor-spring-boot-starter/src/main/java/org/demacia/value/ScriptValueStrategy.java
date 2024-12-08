@@ -39,8 +39,8 @@ public class ScriptValueStrategy implements ValueStrategy {
             String defaultValue = rule.getDefaultValue();
             return o == null ? defaultValue : o;
         } catch (Exception e) {
-            log.error("映射规则：{} 脚本执行异常：", rule.getRuleId(), e);
-            throw new RuntimeException(StrUtil.format("映射规则：{} 脚本执行异常：" + rule.getRuleId()), e);
+            log.error("映射规则：{} 脚本执行异常：", rule.getRuleCode(), e);
+            throw new RuntimeException(StrUtil.format("映射规则：{} 脚本执行异常：" + rule.getRuleCode()), e);
         }
     }
 
