@@ -8,5 +8,14 @@ import lombok.Data;
  */
 @Data
 public class ApiService {
+
+    private String serviceCode;
+
     private String handler;
+
+    private String httpMethod;
+
+    private String messageFormat;
+
+    private String uri;
 }

@@ -8,14 +8,17 @@ import cn.hutool.extra.spring.SpringUtil;
 import cn.hutool.json.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.demacia.AbstractService;
-import org.demacia.ConvertException.ConvertException;
 import org.demacia.Convertor;
-import org.demacia.mapper.RuleMapper;
 import org.demacia.constant.Const;
 import org.demacia.domain.*;
 import org.demacia.enums.ResultCode;
+import org.demacia.exception.ConvertException;
+import org.demacia.mapper.ApiAppMapper;
+import org.demacia.mapper.ApiServiceMapper;
+import org.demacia.mapper.RuleMapper;
 import org.demacia.rule.RuleMapping;
 import org.demacia.send.handler.DefaultSendHandler;
+import org.demacia.util.JsonUtil;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
@@ -35,7 +38,7 @@ import java.util.Map;
 public class SendService extends AbstractService {
 
     @Resource
-    private ApiAppService apiAppService;
+    private ApiAppMapper apiAppMapper;
 
     @Resource
     private RuleMapper ruleMapper;
@@ -44,7 +47,7 @@ public class SendService extends AbstractService {
     private Convertor convertor;
 
     @Resource
-    private ApiServiceService apiServiceService;
+    private ApiServiceMapper apiServiceMapper;
 
     /**
      * 处理统一API推送请求
@@ -104,7 +107,7 @@ public class SendService extends AbstractService {
                 return SpringUtil.getBean(DefaultSendHandler.class);
             }
             log.error("没有找到对应的处理器：{}", apiService.getHandler());
-            throw ConvertException(APP_HANDLER_ERROR);
+            throw new ConvertException("");
         }
         return sendHandler;
     }
@@ -113,31 +116,26 @@ public class SendService extends AbstractService {
      * 初始化上下文
      * 此方法用于初始化上下文对象，设置请求参数、API应用和API服务信息
      *
-     * @param context 上下文对象，用于存储请求参数、API应用和API服务信息
+     * @param context     上下文对象，用于存储请求参数、API应用和API服务信息
      * @param sendRequest 推送请求数据传输对象，包含推送所需的信息
      */
     private void initContext(Context context, SendRequest sendRequest) {
         Pre pre = new Pre();
-        pre.setSelfCode(sendRequest.getSelfCode());
-        pre.setSelfValue(sendRequest.getSelfValue());
-        pre.setBizNo(sendRequest.getOuterBusinessNo());
+        pre.setBizNo(sendRequest.getBizNo());
         context.setPre(pre);
         context.setCallType(Const.CallType.SEND);
-        context.setDirectCall(sendRequest.isDirectCall());
-        context.setRetryParams(JSON.toJSONString(sendRequest));
+        context.setRetryParams(JsonUtil.toJson(sendRequest));
         Map<String, Object> params = BeanUtil.beanToMap(sendRequest);
-        // TODO 在规则里面解析，避免解析两次
-        params.put("reqData", JSONUtil.parseObj(sendRequest.getReqData(), true));
         context.setParams(params);
-        ApiApp apiApp = apiAppService.getApiAppInfoBySelfCode(sendRequest.getSelfCode());
+        ApiApp apiApp = apiAppMapper.getApiApp(sendRequest.getAppCode());
         if (null == apiApp) {
-            throw ConvertException(APP_CODE_NOT_EXIST, sendRequest.getSelfCode());
+            throw new ConvertException("");
         }
         context.setApiApp(apiApp);
         // 对应接口处理
-        ApiService apiService = apiServiceService.getApiServiceByServiceType(apiApp.getId(), sendRequest.getServiceType());
+        ApiService apiService = apiServiceMapper.getApiService(apiApp.getId(), sendRequest.getServiceCode());
         if (null == apiService) {
-            throw ConvertException(API_SERVICE_NOT_EXISTS);
+            throw new ConvertException("");
         }
         context.setApiService(apiService);
         context.setRuleCode(apiApp.getAppCode() + StrUtil.DASHED + apiService.getServiceCode());
@@ -145,7 +143,7 @@ public class SendService extends AbstractService {
         if (context.isInternalRetry()) {
             String reqMsg = sendRequest.getReqMsg();
             context.setReqMsg(reqMsg);
-            if (Const.MsgType.FORM == apiService.getMsgType()) {
+            if (Const.MessageFormat.FORM.equals(apiService.getMessageFormat())) {
                 context.setTarget(JSONUtil.parseObj(reqMsg));
             }
         }
@@ -165,11 +163,11 @@ public class SendService extends AbstractService {
             return new HashMap<>(16);
         }
         ApiService apiService = context.getApiService();
-        int msgType = apiService.getMsgType();
+        String messageFormat = apiService.getMessageFormat();
         Map<String, Object> rspMap;
         String rspMsg = context.getRspMsg();
         try {
-            if (msgType == Const.MsgType.XML) {
+            if (Const.MessageFormat.XML.equals(messageFormat)) {
                 rspMap = XmlUtil.xmlToMap(rspMsg);
             } else {
                 rspMap = JSONUtil.parseObj(rspMsg);

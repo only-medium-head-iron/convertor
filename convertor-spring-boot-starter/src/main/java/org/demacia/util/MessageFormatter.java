@@ -36,29 +36,13 @@ public class MessageFormatter {
         return msg;
     }
 
-    public static String determineMsgFormat(Map<String, Object> map, int msgType) {
-        log.info("determineMsgFormat: map={}, msgType={}", map, msgType);
-        if (MapUtil.isEmpty(map)) {
-            return "";
-        }
-        String msg = "";
-        if (msgType == Const.MsgType.XML) {
-            String rootName = map.keySet().iterator().next();
-            Map<String, Object> toMap = BeanUtil.beanToMap(map.get(rootName));
-            msg = XmlUtil.mapToXmlStr(toMap, rootName);
-        } else {
-            msg = JSONUtil.toJsonStr(map);
-        }
-        return msg;
-    }
-
-    public static String determineMsgFormat(Object object, int msgType) {
-        log.info("determineMsgFormat: object={}, msgType={}", object, msgType);
+    public static String determineMsgFormat(Object object, String messageFormat) {
+        log.info("determineMsgFormat: object={}, messageFormat={}", object, messageFormat);
         if (ObjectUtil.isEmpty(object)) {
             return "";
         }
         String msg = "";
-        if (msgType == Const.MsgType.XML) {
+        if (Const.MessageFormat.XML.equals(messageFormat)) {
             XmlMapper xmlMapper = new XmlMapper();
             try {
                 msg = xmlMapper.writeValueAsString(object);

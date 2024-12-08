@@ -110,10 +110,10 @@ public class Const {
      * <p>
      * 下发使用消息类型
      */
-    public static class MsgType {
-        public static final int JSON = 1;
-        public static final int XML = 2;
-        public static final int FORM = 3;
+    public static class MessageFormat {
+        public static final String JSON = "json";
+        public static final String XML = "xml";
+        public static final String FORM = "form";
 
     }
 

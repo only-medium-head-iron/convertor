@@ -5,6 +5,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.XmlUtil;
 import cn.hutool.extra.spring.SpringUtil;
+import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.demacia.AbstractService;
@@ -73,7 +74,7 @@ public class ReceiveService extends AbstractService {
             rsp.setSuccess(true);
         } catch (ConvertException e) {
             log.error("外部请求处理失败：{}", e.getMessage(), e);
-            rsp.setCode(String.valueOf(e.getCode()));
+            rsp.setCode(e.getCode());
             rsp.setMessage(e.getMessage());
             rsp.setOuterMessage(e.getMessage());
         } catch (Exception e) {
@@ -86,8 +87,8 @@ public class ReceiveService extends AbstractService {
             try {
                 Map<String, Object> parseResult = parseRsp(context, rsp);
                 Req req = context.getReq();
-                String msgFormat = req != null ? req.getFormat() : Const.MsgFormat.JSON;
-                rspMsg = MessageFormatter.determineMsgFormat(parseResult, msgFormat);
+                String messageFormat = req != null ? req.getFormat() : Const.MsgFormat.JSON;
+                rspMsg = MessageFormatter.determineMsgFormat(parseResult, messageFormat);
                 context.setRspMsg(rspMsg);
             } catch (Exception e) {
                 log.error("响应解析失败：{}", e.getMessage(), e);
@@ -107,7 +108,7 @@ public class ReceiveService extends AbstractService {
      * 此方法通过Spring上下文获取指定名称的Bean作为接收处理程序
      * 如果无法找到对应的Bean，则抛出异常提示应用处理器错误
      *
-     * @param context 上下文对象，用于获取API服务信息
+     * @param context 上下文对象
      * @return 返回获取到的接收处理程序实例
      */
     private ReceiveHandler determineWhichHandler(Context context) {
@@ -126,12 +127,11 @@ public class ReceiveService extends AbstractService {
      * 初始化上下文对象
      * 该方法主要用于设置和验证API调用的上下文环境，包括路径参数、请求消息、应用信息、服务信息等
      *
-     * @param context 上下文对象，用于承载API调用的相关信息
+     * @param context        上下文对象，用于承载API调用的相关信息
      * @param receiveRequest 请求参数，包含请求头、路径参数、请求体
      */
     public void initContext(Context context, ReceiveRequest receiveRequest) {
         context.setCallType(Const.CallType.RECEIVE);
-        context.setDirectCall(receiveRequest.isDirectCall());
         context.setRetryParams(JsonUtil.toJson(receiveRequest));
         String reqMsg = receiveRequest.getReqMsg();
         String appCode = receiveRequest.getAppCode();
@@ -189,7 +189,7 @@ public class ReceiveService extends AbstractService {
      * 根据请求消息的格式（JSON或XML），将其解析为参数Map，并设置到上下文对象中
      *
      * @param context 上下文对象，用于承载解析后的请求参数
-     * @param reqMsg 请求消息，可以是JSON或XML格式
+     * @param reqMsg  请求消息，可以是JSON或XML格式
      * @throws ConvertException 如果请求消息既不是JSON也不是XML格式，则抛出转换错误的服务异常
      */
     private void setParams(Context context, String reqMsg) {
@@ -197,7 +197,9 @@ public class ReceiveService extends AbstractService {
         try {
             // TODO 如果是JSON数组，JSONArray jsonArray = JSONUtil.parseArray(reqMsg); 待测试
             if (JSONUtil.isTypeJSONObject(reqMsg)) {
-                params = JSONUtil.parseObj(reqMsg);
+                params = JSONUtil.parseObj(reqMsg, true);
+            } else if (JSONUtil.isTypeJSONArray(reqMsg)) {
+                JSONArray jsonArray = JSONUtil.parseArray(reqMsg, true);
             } else {
                 params = XmlUtil.xmlToMap(reqMsg);
             }
@@ -211,12 +213,12 @@ public class ReceiveService extends AbstractService {
     /**
      * 设置API服务信息到上下文对象中
      *
-     * @param context 上下文对象，包含API应用相关信息
+     * @param context     上下文对象，包含API应用相关信息
      * @param serviceCode 服务代码，用于标识特定的服务
-     * <p>
-     * 通过上下文对象获取API应用ID和服务代码，查询对应的API服务信息
-     * 如果服务不存在，则抛出异常提示服务不存在
-     * 否则将查询到的服务信息设置到上下文对象中，供后续处理使用
+     *                    <p>
+     *                    通过上下文对象获取API应用ID和服务代码，查询对应的API服务信息
+     *                    如果服务不存在，则抛出异常提示服务不存在
+     *                    否则将查询到的服务信息设置到上下文对象中，供后续处理使用
      */
     private void setApiService(Context context, String serviceCode) {
         ApiApp apiApp = context.getApiApp();
@@ -245,7 +247,7 @@ public class ReceiveService extends AbstractService {
      * 解析响应对象
      *
      * @param context 上下文对象，包含请求相关信息
-     * @param rsp 响应对象，包含需要解析的数据
+     * @param rsp     响应对象，包含需要解析的数据
      * @return 解析后的响应参数，以Map形式返回
      */
     public Map<String, Object> parseRsp(Context context, Rsp rsp) {

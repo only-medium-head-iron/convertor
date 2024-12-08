@@ -14,5 +14,6 @@ public class ApiApp {
     private String appKey;
     private String appSecret;
     private String signMethod;
+    private String url;
     private Long validTime;
 }

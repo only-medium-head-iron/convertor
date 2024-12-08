@@ -76,8 +76,8 @@ public abstract class AbstractSendHandler implements SendHandler {
         Map<String, Object> parseResult = BeanUtil.beanToMap(object);
         context.setTarget(parseResult);
         ApiService apiService = context.getApiService();
-        int msgType = apiService.getMsgType();
-        String reqMsg = MessageFormatter.determineMsgFormat(parseResult, msgType);
+        String messageFormat = apiService.getMessageFormat();
+        String reqMsg = MessageFormatter.determineMsgFormat(parseResult, messageFormat);
         context.setReqMsg(reqMsg);
     }
 
@@ -113,14 +113,14 @@ public abstract class AbstractSendHandler implements SendHandler {
         Map<String, String> headers = buildHeaders(context);
         String query = URLUtil.buildQuery(pathParams, StandardCharsets.UTF_8);
         ApiApp apiApp = context.getApiApp();
-        String pushUrl = apiApp.getPushUrl();
+        String pushUrl = apiApp.getUrl();
         ApiService apiService = context.getApiService();
-        String path = apiService.getPath();
-        path = StrUtil.isBlank(path) ? "" : path;
-        String url = pushUrl + path + (StrUtil.isBlank(query) ? "" : "?" + query);
+        String uri = apiService.getUri();
+        uri = StrUtil.isBlank(uri) ? "" : uri;
+        String url = pushUrl + uri + (StrUtil.isBlank(query) ? "" : "?" + query);
         // TODO 更改为 OkHttpUtil
         HttpRequest httpRequest = HttpUtil.createPost(url);
-        if (Const.MsgType.FORM == apiService.getMsgType()) {
+        if (Const.MessageFormat.FORM.equals(apiService.getMessageFormat())) {
             // 表单提交
             httpRequest.form(context.getTarget());
         } else {

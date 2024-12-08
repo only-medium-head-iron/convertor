@@ -13,14 +13,6 @@ import java.util.Map;
 public class ReceiveRequest {
 
     /**
-     * 是否直接调用。
-     * <p>
-     * 默认值为 {@code true}，用于区分是否记录日志和清除上下文。
-     */
-    @JsonIgnore
-    private boolean directCall = true;
-
-    /**
      * 标志是否内部调用。
      * <p>
      * 默认值为 {@code false}，表示外部接口调用。
