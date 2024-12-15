@@ -64,7 +64,7 @@ public class SendService extends AbstractService {
         ContextHolder.set(context);
         try {
             initContext(context, sendRequest);
-            SendHandler sendHandler = getHandler(context);
+            SendHandler sendHandler = determineWhichHandler(context);
             sendHandler.handle(context);
             Map<String, Object> rspMap = parseRsp(context);
             rsp = BeanUtil.toBean(rspMap, Rsp.class);
@@ -95,7 +95,7 @@ public class SendService extends AbstractService {
      * @param context 上下文对象，用于获取API服务信息
      * @return SendHandler 返回对应的发送处理器实例
      */
-    private SendHandler getHandler(Context context) {
+    private SendHandler determineWhichHandler(Context context) {
         ApiService apiService = context.getApiService();
         SendHandler sendHandler;
         try {

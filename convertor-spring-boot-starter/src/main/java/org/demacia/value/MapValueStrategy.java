@@ -1,5 +1,6 @@
 package org.demacia.value;
 
+import cn.hutool.core.util.StrUtil;
 import org.demacia.enums.ValueType;
 import org.demacia.rule.RuleMapping;
 import org.springframework.stereotype.Component;
@@ -19,8 +20,22 @@ public class MapValueStrategy implements ValueStrategy {
     @Override
     public Object getValue(Map<String, Object> sourceMap, RuleMapping rule) {
         String source = rule.getSource();
-        Object o = sourceMap.get(source);
+        String[] keys = StrUtil.splitToArray(source, ".");
+        Object o = getValue(sourceMap, keys, 0);
         return o == null ? rule.getDefaultValue() : o;
+    }
+
+    private Object getValue(Map<String, Object> map, String[] keys, int index) {
+        if (index == keys.length - 1) {
+            return map.get(keys[index]);
+        } else {
+            Object nextMap = map.get(keys[index]);
+            if (nextMap instanceof Map) {
+                return getValue((Map<String, Object>) nextMap, keys, index + 1);
+            } else {
+                return null;
+            }
+        }
     }
 
     @Override

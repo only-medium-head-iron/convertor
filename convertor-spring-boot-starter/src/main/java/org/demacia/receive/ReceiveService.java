@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,7 +76,7 @@ public class ReceiveService extends AbstractService {
         } catch (ConvertException e) {
             log.error("外部请求处理失败：{}", e.getMessage(), e);
             rsp.setCode(e.getCode());
-            rsp.setMessage(e.getMessage());
+            rsp.setMessage(e.toString());
             rsp.setOuterMessage(e.getMessage());
         } catch (Exception e) {
             log.error("外部请求处理失败：{}", e.getMessage(), e);
@@ -199,7 +200,8 @@ public class ReceiveService extends AbstractService {
             if (JSONUtil.isTypeJSONObject(reqMsg)) {
                 params = JSONUtil.parseObj(reqMsg, true);
             } else if (JSONUtil.isTypeJSONArray(reqMsg)) {
-                JSONArray jsonArray = JSONUtil.parseArray(reqMsg, true);
+//                JSONArray jsonArray = JSONUtil.parseArray(reqMsg, true);
+                params = new HashMap<>();
             } else {
                 params = XmlUtil.xmlToMap(reqMsg);
             }

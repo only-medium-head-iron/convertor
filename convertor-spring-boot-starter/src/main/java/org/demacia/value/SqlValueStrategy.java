@@ -5,8 +5,10 @@ import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.demacia.enums.ValueType;
-import org.demacia.ConvertException.ConvertException;
+import org.demacia.exception.ConvertException;
+import org.demacia.mapper.RuleMapper;
 import org.demacia.rule.RuleMapping;
+import org.demacia.util.StrFormatter;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -31,11 +33,11 @@ public class SqlValueStrategy implements ValueStrategy {
         sourceMap.put("SQL", rule.getScript());
         List<Map<String, Object>> resultMapList = apiMapper.select(sourceMap);
         if (CollUtil.isEmpty(resultMapList)) {
-            String message = StrUtil.isBlank(rule.getMessage()) ? String.format("rule = %s, script = %s, error: %s", rule, rule.getScript(), "解析SQL值为空") : StringFormatter.format(rule.getMessage(), sourceMap);
+            String message = StrUtil.isBlank(rule.getMessage()) ? String.format("rule = %s, script = %s, error: %s", rule, rule.getScript(), "解析SQL值为空") : StrFormatter.format(rule.getMessage(), sourceMap);
             throw new ConvertException(message);
         }
         if (resultMapList.size() > 1) {
-            String message = StrUtil.isBlank(rule.getMessage()) ? String.format("rule = %s, script = %s, error: %s", rule, rule.getScript(), "解析SQL值存在多个") : StringFormatter.format(rule.getMessage(), sourceMap);
+            String message = StrUtil.isBlank(rule.getMessage()) ? String.format("rule = %s, script = %s, error: %s", rule, rule.getScript(), "解析SQL值存在多个") : StrFormatter.format(rule.getMessage(), sourceMap);
             throw new ConvertException(message);
         }
         Map<String, Object> objectMap = resultMapList.get(0);
