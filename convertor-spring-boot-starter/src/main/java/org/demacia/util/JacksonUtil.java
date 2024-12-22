@@ -1,11 +1,9 @@
 package org.demacia.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import java.util.Map;
 
@@ -13,7 +11,8 @@ import java.util.Map;
  * @author hepenglin
  * @since 2024/11/30 22:10
  */
-public class JsonUtil {
+public class JacksonUtil {
+
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public static String toJson(Object obj) {
@@ -27,6 +26,9 @@ public class JsonUtil {
     }
 
     public static Map<String, Object> toMap(Object object) {
+        if (object == null) {
+            return null;
+        }
         TypeFactory typeFactory = OBJECT_MAPPER.getTypeFactory();
         MapType mapType = typeFactory.constructMapType(Map.class, String.class, Object.class);
         return OBJECT_MAPPER.convertValue(object, mapType);

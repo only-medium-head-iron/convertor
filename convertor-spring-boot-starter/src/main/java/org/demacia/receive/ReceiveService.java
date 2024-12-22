@@ -5,7 +5,6 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.XmlUtil;
 import cn.hutool.extra.spring.SpringUtil;
-import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.demacia.AbstractService;
@@ -18,7 +17,7 @@ import org.demacia.enums.ResultCode;
 import org.demacia.domain.*;
 import org.demacia.exception.ConvertException;
 import org.demacia.rule.RuleMapping;
-import org.demacia.util.JsonUtil;
+import org.demacia.util.JacksonUtil;
 import org.demacia.util.MessageFormatter;
 import org.demacia.validate.RequestValidator;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -133,7 +132,7 @@ public class ReceiveService extends AbstractService {
      */
     public void initContext(Context context, ReceiveRequest receiveRequest) {
         context.setCallType(Const.CallType.RECEIVE);
-        context.setRetryParams(JsonUtil.toJson(receiveRequest));
+        context.setRetryParams(JacksonUtil.toJson(receiveRequest));
         String reqMsg = receiveRequest.getReqMsg();
         String appCode = receiveRequest.getAppCode();
         BeanUtil.copyProperties(receiveRequest, context);

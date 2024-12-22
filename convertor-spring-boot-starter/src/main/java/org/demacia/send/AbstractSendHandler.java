@@ -19,6 +19,7 @@ import org.demacia.domain.Context;
 import org.demacia.rule.RuleMapping;
 import org.demacia.step.Step;
 import org.demacia.util.MessageFormatter;
+import org.demacia.util.JacksonUtil;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -51,7 +52,7 @@ public abstract class AbstractSendHandler implements SendHandler {
         beforeConvert(context);
 
         // 通过字段映射方式转换报文转换
-        Object object = convertor.convert(context.getRuleCode(), BeanUtil.beanToMap(context));
+        Object object = convertor.convert(context.getRuleCode(), JacksonUtil.toMap(context));
 
         // 根据配置的消息格式格式化请求消息
         formatRequestMessage(context, object);

@@ -1,12 +1,12 @@
 package org.demacia.receive;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 
 import lombok.extern.slf4j.Slf4j;
 import org.demacia.Convertor;
 import org.demacia.domain.Context;
 import org.demacia.step.Step;
+import org.demacia.util.JacksonUtil;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -33,7 +33,7 @@ public abstract class AbstractReceiveHandler implements ReceiveHandler {
     @Override
     public Object handle(Context context) {
         beforeConvert(context);
-        Object object = convertor.convert(context.getRuleCode(), BeanUtil.beanToMap(context));
+        Object object = convertor.convert(context.getRuleCode(), JacksonUtil.toMap(context));
         afterConvert(object);
         return object;
     }

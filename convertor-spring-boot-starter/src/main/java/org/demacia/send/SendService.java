@@ -18,7 +18,7 @@ import org.demacia.mapper.ApiServiceMapper;
 import org.demacia.mapper.RuleMapper;
 import org.demacia.rule.RuleMapping;
 import org.demacia.send.handler.DefaultSendHandler;
-import org.demacia.util.JsonUtil;
+import org.demacia.util.JacksonUtil;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
@@ -124,7 +124,7 @@ public class SendService extends AbstractService {
         pre.setBizNo(sendRequest.getBizNo());
         context.setPre(pre);
         context.setCallType(Const.CallType.SEND);
-        context.setRetryParams(JsonUtil.toJson(sendRequest));
+        context.setRetryParams(JacksonUtil.toJson(sendRequest));
         Map<String, Object> params = BeanUtil.beanToMap(sendRequest);
         context.setParams(params);
         ApiApp apiApp = apiAppMapper.getApiApp(sendRequest.getAppCode());
