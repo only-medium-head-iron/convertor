@@ -23,12 +23,11 @@ public class AviatorEvaluatorConfigurer {
     @PostConstruct
     public void init() throws Exception {
         AviatorEvaluator.setOption(Options.ALWAYS_PARSE_FLOATING_POINT_NUMBER_INTO_DECIMAL, true);
-        AviatorEvaluator.getInstance().useLRUExpressionCache(5000);
+        AviatorEvaluator.getInstance().useLRUExpressionCache(1000);
         AviatorEvaluator.addStaticFunctions("LocalDateTime", LocalDateTime.class);
         AviatorEvaluator.addStaticFunctions("LocalDateTimeUtil", LocalDateTimeUtil.class);
         AviatorEvaluator.addStaticFunctions("DateUtil", DateUtil.class);
         AviatorEvaluator.addStaticFunctions("IdUtil", IdUtil.class);
-        IdUtil.fastSimpleUUID();
         AviatorEvaluator.addStaticFunctions("StrUtil", StrUtil.class);
         AviatorEvaluator.addStaticFunctions("ObjectUtil", ObjectUtil.class);
         AviatorEvaluator.addStaticFunctions("NumberUtil", NumberUtil.class);

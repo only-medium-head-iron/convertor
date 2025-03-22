@@ -8,7 +8,7 @@ import org.demacia.domain.Context;
  */
 public class RequestValidator {
 
-    public static void validateRepeatRequest(String reqId, Long validTime) {
+    public static void validateRepeatRequest(String requestId, Long validTime) {
         // TODO
     }
 
