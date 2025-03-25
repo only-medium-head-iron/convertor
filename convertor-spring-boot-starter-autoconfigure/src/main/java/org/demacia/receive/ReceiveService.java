@@ -57,7 +57,7 @@ public class ReceiveService extends AbstractService {
      * @param receiveRequest 需要的参数
      * @return 响应消息，返回给外部应用的响应数据
      */
-    public String handle(ReceiveRequest receiveRequest) {
+    public String receive(ReceiveRequest receiveRequest) {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         String rspMsg = "";

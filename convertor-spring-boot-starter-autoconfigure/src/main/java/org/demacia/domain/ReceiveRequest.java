@@ -1,7 +1,9 @@
 package org.demacia.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Map;
 
@@ -10,6 +12,8 @@ import java.util.Map;
  * @since 2024-09-05 19:50
  **/
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ReceiveRequest {
 
     /**
