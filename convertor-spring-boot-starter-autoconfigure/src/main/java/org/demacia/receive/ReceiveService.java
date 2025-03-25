@@ -76,12 +76,12 @@ public class ReceiveService extends AbstractService {
             log.error("外部请求处理失败：{}", e.getMessage(), e);
             rsp.setCode(e.getCode());
             rsp.setMessage(e.toString());
-            rsp.setOuterMessage(e.getMessage());
+            rsp.setMessageForExternal(e.getMessage());
         } catch (Exception e) {
             log.error("外部请求处理失败：{}", e.getMessage(), e);
             rsp.setCode(ResultCode.FAILURE.getCode());
             rsp.setMessage(e.toString());
-            rsp.setOuterMessage("系统异常");
+            rsp.setMessageForExternal("系统异常");
         } finally {
             context.setRsp(rsp);
             try {

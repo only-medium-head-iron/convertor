@@ -72,12 +72,12 @@ public class SendService extends AbstractService {
             log.error("请求失败：{}", e.getMessage(), e);
             rsp.setCode(e.getCode());
             rsp.setMessage(e.getMessage());
-            rsp.setOuterMessage(e.getMessage());
+            rsp.setMessageForExternal(e.getMessage());
         } catch (Exception e) {
             log.error("请求失败：{}", e.getMessage(), e);
             rsp.setCode(ResultCode.FAILURE.getCode());
             rsp.setMessage(e.toString());
-            rsp.setOuterMessage(ResultCode.FAILURE.getMessage());
+            rsp.setMessageForExternal(ResultCode.FAILURE.getMessage());
         } finally {
             context.setRsp(rsp);
             recordLogAndClearContext(context);

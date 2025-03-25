@@ -36,5 +36,5 @@ public class Rsp {
      * <p>
      * 记录模糊错误信息，供外部展示。
      */
-    private String outerMessage;
+    private String messageForExternal;
 }
