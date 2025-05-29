@@ -13,4 +13,9 @@ public class Log {
 
     private String appName;
 
+    private String appCode;
+
+    private String requestId;
+
+
 }
