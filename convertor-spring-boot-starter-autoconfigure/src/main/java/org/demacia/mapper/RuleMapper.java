@@ -1,5 +1,6 @@
 package org.demacia.mapper;
 
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.demacia.domain.Column;
 import org.demacia.rule.RuleConvert;
@@ -14,6 +15,7 @@ import java.util.Map;
  * @author hepenglin
  * @since 2024/12/8 8:02
  */
+@Mapper
 public interface RuleMapper {
 
     List<RuleMapping> getMappingRulesByRuleCode(String ruleType, String ruleCode);
