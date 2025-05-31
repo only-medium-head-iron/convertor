@@ -7,7 +7,7 @@ import lombok.Data;
  * @since 2024/12/8 7:42
  */
 @Data
-public class ApiApp {
+public class App {
     private Long id;
     private String appCode;
     private String appName;

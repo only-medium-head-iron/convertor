@@ -1,7 +1,7 @@
 package org.demacia.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
-import org.demacia.domain.ApiApp;
+import org.demacia.domain.App;
 
 /**
  * @author hepenglin
@@ -9,6 +9,5 @@ import org.demacia.domain.ApiApp;
  */
 @Mapper
 public interface AppMapper {
-
-    ApiApp getApiApp(String appCode);
+    App getApp(String appCode);
 }

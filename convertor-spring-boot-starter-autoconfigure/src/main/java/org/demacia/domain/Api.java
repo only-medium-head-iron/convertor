@@ -7,7 +7,7 @@ import lombok.Data;
  * @since 2024/12/8 7:58
  */
 @Data
-public class ApiService {
+public class Api {
 
     private String serviceCode;
 
