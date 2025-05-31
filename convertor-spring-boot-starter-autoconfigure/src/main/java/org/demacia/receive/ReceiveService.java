@@ -9,7 +9,7 @@ import cn.hutool.json.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.demacia.AbstractService;
 import org.demacia.Convertor;
-import org.demacia.mapper.ApiAppMapper;
+import org.demacia.mapper.AppMapper;
 import org.demacia.mapper.ApiServiceMapper;
 import org.demacia.mapper.RuleMapper;
 import org.demacia.constant.Const;
@@ -45,7 +45,7 @@ public class ReceiveService extends AbstractService {
     private RuleMapper ruleMapper;
 
     @Resource
-    private ApiAppMapper apiAppMapper;
+    private AppMapper appMapper;
 
     @Resource
     private ApiServiceMapper apiServiceMapper;
@@ -237,7 +237,7 @@ public class ReceiveService extends AbstractService {
      * @param appCode 应用代码，用于唯一标识一个应用
      */
     private void setApiApp(Context context, String appCode) {
-        ApiApp apiApp = apiAppMapper.getApiApp(appCode);
+        ApiApp apiApp = appMapper.getApiApp(appCode);
         if (null == apiApp) {
             throw new ConvertException("");
         }

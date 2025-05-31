@@ -13,7 +13,7 @@ import org.demacia.constant.Const;
 import org.demacia.domain.*;
 import org.demacia.enums.ResultCode;
 import org.demacia.exception.ConvertException;
-import org.demacia.mapper.ApiAppMapper;
+import org.demacia.mapper.AppMapper;
 import org.demacia.mapper.ApiServiceMapper;
 import org.demacia.mapper.RuleMapper;
 import org.demacia.rule.RuleMapping;
@@ -38,7 +38,7 @@ import java.util.Map;
 public class SendService extends AbstractService {
 
     @Resource
-    private ApiAppMapper apiAppMapper;
+    private AppMapper appMapper;
 
     @Resource
     private RuleMapper ruleMapper;
@@ -127,7 +127,7 @@ public class SendService extends AbstractService {
         context.setRetryParams(JacksonUtil.toJson(sendRequest));
         Map<String, Object> params = BeanUtil.beanToMap(sendRequest);
         context.setParams(params);
-        ApiApp apiApp = apiAppMapper.getApiApp(sendRequest.getAppCode());
+        ApiApp apiApp = appMapper.getApiApp(sendRequest.getAppCode());
         if (null == apiApp) {
             throw new ConvertException("");
         }

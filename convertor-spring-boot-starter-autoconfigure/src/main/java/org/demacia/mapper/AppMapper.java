@@ -8,7 +8,7 @@ import org.demacia.domain.ApiApp;
  * @since 2024/12/8 8:54
  */
 @Mapper
-public interface ApiAppMapper {
+public interface AppMapper {
 
     ApiApp getApiApp(String appCode);
 }
