@@ -19,7 +19,7 @@ CREATE TABLE app_config
     updated_by   VARCHAR(64)  NOT NULL DEFAULT 'system' COMMENT '更新人',
     updated_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     UNIQUE INDEX unq_app_code (app_code)
-) COMMENT '第三方应用配置表';
+) COMMENT '应用配置表';
 
 -- 接口配置表
 DROP TABLE IF EXISTS api_config;
@@ -30,6 +30,7 @@ CREATE TABLE api_config
     api_code       VARCHAR(64)     NOT NULL DEFAULT '' COMMENT '接口编码',
     api_name       VARCHAR(64)     NOT NULL DEFAULT '' COMMENT '接口名称',
     api_path       VARCHAR(256)    NOT NULL DEFAULT '' COMMENT '接口路径',
+    handler_class  VARCHAR(256)    NOT NULL DEFAULT '' COMMENT '处理器类',
     direction      TINYINT         NOT NULL COMMENT '方向:1接收 2发送',
     message_format TINYINT         NOT NULL DEFAULT 1 COMMENT '报文格式：1=JSON 2=XML',
     http_method    TINYINT         NOT NULL DEFAULT 1 COMMENT '请求方式：1=POST 2=GET 3=PUT',
@@ -62,4 +63,4 @@ CREATE TABLE api_log
     INDEX idx_app_code (app_code),
     INDEX idx_api_code (api_code),
     INDEX idx_created_time (created_time)
-) COMMENT '接口调用日志表';
+) COMMENT '接口日志表';
