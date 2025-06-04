@@ -1,6 +1,6 @@
 -- 创建数据库
-CREATE DATABASE IF NOT EXISTS `converter_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE `converter_db`;
+CREATE DATABASE IF NOT EXISTS `convertor_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `convertor_db`;
 
 -- 应用配置表
 DROP TABLE IF EXISTS app_config;
@@ -27,8 +27,8 @@ CREATE TABLE api_config
 (
     id             BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
     app_id         BIGINT UNSIGNED NOT NULL COMMENT '应用ID',
-    api_code       VARCHAR(64)     NOT NULL DEFAULT '' COMMENT '接口编码',
-    api_name       VARCHAR(64)     NOT NULL DEFAULT '' COMMENT '接口名称',
+    api_code       VARCHAR(256)    NOT NULL DEFAULT '' COMMENT '接口编码',
+    api_name       VARCHAR(256)    NOT NULL DEFAULT '' COMMENT '接口名称',
     api_path       VARCHAR(256)    NOT NULL DEFAULT '' COMMENT '接口路径',
     handler_class  VARCHAR(256)    NOT NULL DEFAULT '' COMMENT '处理器类',
     direction      TINYINT         NOT NULL COMMENT '方向:1接收 2发送',
@@ -58,7 +58,7 @@ CREATE TABLE api_log
     response_body TEXT         NOT NULL COMMENT '响应报文',
     retry_params  VARCHAR(512) NOT NULL DEFAULT '' COMMENT '重试参数',
     status        TINYINT(1)   NOT NULL DEFAULT 1 COMMENT '状态：1成功 0失败',
-    error_msg     VARCHAR(512) NOT NULL DEFAULT '' COMMENT '错误信息',
+    error_message VARCHAR(512) NOT NULL DEFAULT '' COMMENT '错误信息',
     created_time  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     INDEX idx_app_code (app_code),
     INDEX idx_api_code (api_code),
