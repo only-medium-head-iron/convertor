@@ -1,7 +1,7 @@
 package org.demacia;
 
 import lombok.extern.slf4j.Slf4j;
-import org.demacia.domain.ApiApp;
+import org.demacia.domain.App;
 import org.demacia.domain.Context;
 import org.demacia.domain.ContextHolder;
 import org.demacia.domain.Log;
@@ -33,8 +33,8 @@ public abstract class AbstractService {
 
     private Log buildLog(Context context) {
         Log log = new Log();
-        ApiApp apiApp = context.getApiApp();
-        log.setAppName(apiApp.getAppName());
+        App app = context.getApp();
+        log.setAppName(app.getAppName());
         return log;
     }
 }

@@ -13,8 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.demacia.Convertor;
 import org.demacia.mapper.RuleMapper;
 import org.demacia.constant.Const;
-import org.demacia.domain.ApiApp;
-import org.demacia.domain.ApiService;
+import org.demacia.domain.App;
+import org.demacia.domain.Api;
 import org.demacia.domain.Context;
 import org.demacia.rule.RuleMapping;
 import org.demacia.step.Step;
@@ -76,8 +76,8 @@ public abstract class AbstractSendHandler implements SendHandler {
         // 可以替换成 ObjectMapper.convertValue(object, Map.class)，进行逐级转换
         Map<String, Object> parseResult = BeanUtil.beanToMap(object);
         context.setTarget(parseResult);
-        ApiService apiService = context.getApiService();
-        String messageFormat = apiService.getMessageFormat();
+        Api api = context.getApi();
+        String messageFormat = api.getMessageFormat();
         String reqMsg = MessageFormatter.determineMsgFormat(parseResult, messageFormat);
         context.setReqMsg(reqMsg);
     }
@@ -113,15 +113,15 @@ public abstract class AbstractSendHandler implements SendHandler {
         Map<String, Object> pathParams = buildPathParams(context);
         Map<String, String> headers = buildHeaders(context);
         String query = URLUtil.buildQuery(pathParams, StandardCharsets.UTF_8);
-        ApiApp apiApp = context.getApiApp();
-        String pushUrl = apiApp.getUrl();
-        ApiService apiService = context.getApiService();
-        String uri = apiService.getUri();
+        App app = context.getApp();
+        String pushUrl = app.getUrl();
+        Api api = context.getApi();
+        String uri = api.getUri();
         uri = StrUtil.isBlank(uri) ? "" : uri;
         String url = pushUrl + uri + (StrUtil.isBlank(query) ? "" : "?" + query);
         // TODO 更改为 OkHttpUtil
         HttpRequest httpRequest = HttpUtil.createPost(url);
-        if (Const.MessageFormat.FORM.equals(apiService.getMessageFormat())) {
+        if (Const.MessageFormat.FORM.equals(api.getMessageFormat())) {
             // 表单提交
             httpRequest.form(context.getTarget());
         } else {
@@ -147,13 +147,13 @@ public abstract class AbstractSendHandler implements SendHandler {
      * 以便在API请求中使用
      *
      * @param context 上下文对象，包含API应用相关信息
-     * @return Map<String, Object> 返回构建的路径参数，如果无规则，则返回空地图
+     * @return Map 返回构建的路径参数，如果无规则，则返回空地图
      */
     public Map<String, Object> buildPathParams(Context context) {
-        ApiApp apiApp = context.getApiApp();
-        List<RuleMapping> rules = ruleMapper.getMappingRulesByRuleCode(Const.RuleType.URL, apiApp.getAppCode());
+        App app = context.getApp();
+        List<RuleMapping> rules = ruleMapper.getMappingRulesByRuleCode(Const.RuleType.URL, app.getAppCode());
         if (CollUtil.isEmpty(rules)) {
-            log.info("没有找到路径映射规则：{}", apiApp.getAppCode());
+            log.info("没有找到路径映射规则：{}", app.getAppCode());
             return MapUtil.empty();
         }
         LinkedHashMap<String, Object> pathParams = new LinkedHashMap<>(16);
@@ -169,13 +169,13 @@ public abstract class AbstractSendHandler implements SendHandler {
      * 以便在API请求中使用
      *
      * @param context 上下文对象，包含API应用相关信息
-     * @return Map<String, Object> 返回构建的请求头，如果无规则，则返回空
+     * @return Map 返回构建的请求头，如果无规则，则返回空
      */
     public Map<String, String> buildHeaders(Context context) {
-        ApiApp apiApp = context.getApiApp();
-        List<RuleMapping> rules = ruleMapper.getMappingRulesByRuleCode(Const.RuleType.RHD, apiApp.getAppCode());
+        App app = context.getApp();
+        List<RuleMapping> rules = ruleMapper.getMappingRulesByRuleCode(Const.RuleType.RHD, app.getAppCode());
         if (CollUtil.isEmpty(rules)) {
-            log.info("没有找到请求头映射规则：{}", apiApp.getAppCode());
+            log.info("没有找到请求头映射规则：{}", app.getAppCode());
             return MapUtil.empty();
         }
         LinkedHashMap<String, Object> targetMap = new LinkedHashMap<>(16);

@@ -133,12 +133,12 @@ public class Context {
      * <p>
      * 存储当前请求对应 API 应用的详细信息。
      */
-    private ApiApp apiApp;
+    private App app;
 
     /**
      * API 服务信息。
      * <p>
      * 存储当前请求对应 API 服务的详细信息。
      */
-    private ApiService apiService;
+    private Api api;
 }

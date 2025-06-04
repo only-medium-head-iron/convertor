@@ -9,8 +9,8 @@ import cn.hutool.json.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.demacia.AbstractService;
 import org.demacia.Convertor;
-import org.demacia.mapper.ApiAppMapper;
-import org.demacia.mapper.ApiServiceMapper;
+import org.demacia.mapper.AppMapper;
+import org.demacia.mapper.ApiMapper;
 import org.demacia.mapper.RuleMapper;
 import org.demacia.constant.Const;
 import org.demacia.enums.ResultCode;
@@ -45,10 +45,10 @@ public class ReceiveService extends AbstractService {
     private RuleMapper ruleMapper;
 
     @Resource
-    private ApiAppMapper apiAppMapper;
+    private AppMapper appMapper;
 
     @Resource
-    private ApiServiceMapper apiServiceMapper;
+    private ApiMapper apiMapper;
 
     /**
      * 处理外部应用的请求
@@ -112,8 +112,8 @@ public class ReceiveService extends AbstractService {
      * @return 返回获取到的接收处理程序实例
      */
     private ReceiveHandler determineWhichHandler(Context context) {
-        ApiService apiService = context.getApiService();
-        String handlerBeanName = apiService.getHandler();
+        Api api = context.getApi();
+        String handlerBeanName = api.getHandler();
         ReceiveHandler receiveHandler;
         try {
             receiveHandler = SpringUtil.getBean(StrUtil.lowerFirst(handlerBeanName));
@@ -222,12 +222,12 @@ public class ReceiveService extends AbstractService {
      *                    否则将查询到的服务信息设置到上下文对象中，供后续处理使用
      */
     private void setApiService(Context context, String serviceCode) {
-        ApiApp apiApp = context.getApiApp();
-        ApiService apiService = apiServiceMapper.getApiService(apiApp.getId(), serviceCode);
-        if (null == apiService) {
+        App app = context.getApp();
+        Api api = apiMapper.getApi(app.getId(), serviceCode);
+        if (null == api) {
             throw new ConvertException("");
         }
-        context.setApiService(apiService);
+        context.setApi(api);
     }
 
     /**
@@ -237,11 +237,11 @@ public class ReceiveService extends AbstractService {
      * @param appCode 应用代码，用于唯一标识一个应用
      */
     private void setApiApp(Context context, String appCode) {
-        ApiApp apiApp = apiAppMapper.getApiApp(appCode);
-        if (null == apiApp) {
+        App app = appMapper.getApp(appCode);
+        if (null == app) {
             throw new ConvertException("");
         }
-        context.setApiApp(apiApp);
+        context.setApp(app);
     }
 
     /**
@@ -282,11 +282,11 @@ public class ReceiveService extends AbstractService {
             return;
         }
         Req req = context.getReq();
-        ApiApp apiApp = context.getApiApp();
-        RequestValidator.validateRepeatRequest(req.getReqId(), apiApp.getValidTime());
-        RequestValidator.validateTimeExpired(req.getTimestamp(), apiApp.getValidTime());
+        App app = context.getApp();
+        RequestValidator.validateRepeatRequest(req.getReqId(), app.getValidTime());
+        RequestValidator.validateTimeExpired(req.getTimestamp(), app.getValidTime());
         // 是否要签名验证
-        String signMethod = apiApp.getSignMethod();
+        String signMethod = app.getSignMethod();
         if (Const.SignMethod.NOT_REQUIRED.equals(signMethod)) {
             return;
         }

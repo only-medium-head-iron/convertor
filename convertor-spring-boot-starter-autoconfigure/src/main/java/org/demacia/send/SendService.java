@@ -13,8 +13,8 @@ import org.demacia.constant.Const;
 import org.demacia.domain.*;
 import org.demacia.enums.ResultCode;
 import org.demacia.exception.ConvertException;
-import org.demacia.mapper.ApiAppMapper;
-import org.demacia.mapper.ApiServiceMapper;
+import org.demacia.mapper.AppMapper;
+import org.demacia.mapper.ApiMapper;
 import org.demacia.mapper.RuleMapper;
 import org.demacia.rule.RuleMapping;
 import org.demacia.send.handler.DefaultSendHandler;
@@ -38,7 +38,7 @@ import java.util.Map;
 public class SendService extends AbstractService {
 
     @Resource
-    private ApiAppMapper apiAppMapper;
+    private AppMapper appMapper;
 
     @Resource
     private RuleMapper ruleMapper;
@@ -47,7 +47,7 @@ public class SendService extends AbstractService {
     private Convertor convertor;
 
     @Resource
-    private ApiServiceMapper apiServiceMapper;
+    private ApiMapper apiMapper;
 
     /**
      * 处理统一API推送请求
@@ -55,6 +55,7 @@ public class SendService extends AbstractService {
      * 如果处理过程中抛出异常，则会记录错误并设置响应码和响应信息
      *
      * @param sendRequest 推送请求数据传输对象，包含推送所需的信息
+     * @return Rsp 响应数据传输对象，包含处理结果和响应信息
      */
     public Rsp handle(SendRequest sendRequest) {
         StopWatch stopWatch = new StopWatch();
@@ -96,17 +97,17 @@ public class SendService extends AbstractService {
      * @return SendHandler 返回对应的发送处理器实例
      */
     private SendHandler determineWhichHandler(Context context) {
-        ApiService apiService = context.getApiService();
+        Api api = context.getApi();
         SendHandler sendHandler;
         try {
-            String handlerBeanName = StrUtil.lowerFirst(apiService.getHandler());
+            String handlerBeanName = StrUtil.lowerFirst(api.getHandler());
             sendHandler = SpringUtil.getBean(handlerBeanName);
         } catch (NoSuchBeanDefinitionException e) {
             if (context.isInternalRetry()) {
                 // TODO 重试临时添加，后续迁移需要删除
                 return SpringUtil.getBean(DefaultSendHandler.class);
             }
-            log.error("没有找到对应的处理器：{}", apiService.getHandler());
+            log.error("没有找到对应的处理器：{}", api.getHandler());
             throw new ConvertException("");
         }
         return sendHandler;
@@ -127,23 +128,23 @@ public class SendService extends AbstractService {
         context.setRetryParams(JacksonUtil.toJson(sendRequest));
         Map<String, Object> params = BeanUtil.beanToMap(sendRequest);
         context.setParams(params);
-        ApiApp apiApp = apiAppMapper.getApiApp(sendRequest.getAppCode());
-        if (null == apiApp) {
+        App app = appMapper.getApp(sendRequest.getAppCode());
+        if (null == app) {
             throw new ConvertException("");
         }
-        context.setApiApp(apiApp);
+        context.setApp(app);
         // 对应接口处理
-        ApiService apiService = apiServiceMapper.getApiService(apiApp.getId(), sendRequest.getServiceCode());
-        if (null == apiService) {
+        Api api = apiMapper.getApi(app.getId(), sendRequest.getServiceCode());
+        if (null == api) {
             throw new ConvertException("");
         }
-        context.setApiService(apiService);
-        context.setRuleCode(apiApp.getAppCode() + StrUtil.DASHED + apiService.getServiceCode());
+        context.setApi(api);
+        context.setRuleCode(app.getAppCode() + StrUtil.DASHED + api.getServiceCode());
         context.setInternalRetry(sendRequest.isInternalRetry());
         if (context.isInternalRetry()) {
             String reqMsg = sendRequest.getReqMsg();
             context.setReqMsg(reqMsg);
-            if (Const.MessageFormat.FORM.equals(apiService.getMessageFormat())) {
+            if (Const.MessageFormat.FORM.equals(api.getMessageFormat())) {
                 context.setTarget(JSONUtil.parseObj(reqMsg));
             }
         }
@@ -154,7 +155,7 @@ public class SendService extends AbstractService {
      * 此方法用于解析响应消息，根据API服务的消息类型（XML或JSON）进行解析
      *
      * @param context 上下文对象，用于获取API服务的消息类型
-     * @return Map<String, Object> 解析后的响应消息，以键值对的形式返回
+     * @return Map 解析后的响应消息，以键值对的形式返回
      */
     public Map<String, Object> parseRsp(Context context) {
         List<RuleMapping> rules = ruleMapper.getMappingRulesByRuleCode(Const.RuleType.RSP, context.getRuleCode());
@@ -162,8 +163,8 @@ public class SendService extends AbstractService {
             log.warn("没有找到响应映射规则：{}", context.getRuleCode());
             return new HashMap<>(16);
         }
-        ApiService apiService = context.getApiService();
-        String messageFormat = apiService.getMessageFormat();
+        Api api = context.getApi();
+        String messageFormat = api.getMessageFormat();
         Map<String, Object> rspMap;
         String rspMsg = context.getRspMsg();
         try {
