@@ -29,7 +29,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Spring Boot 相关 -->
-        <spring-boot.version>2.4.2</spring-boot.version>
+        <spring-boot.version>2.7.18</spring-boot.version>
 
         <!-- 自定义模块 -->
         <convertor.version>${project.version}</convertor.version>
@@ -155,8 +155,11 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <!-- windows 环境变量 配置 JAVA_TOOL_OPTIONS -Dfile.encoding=UTF-8 -->
                     <encoding>UTF-8</encoding>
+                    <charset>UTF-8</charset>
                     <docencoding>UTF-8</docencoding>
+<!--                    <detectLinks>true</detectLinks>-->
                 </configuration>
             </plugin>
             <!-- 版本一致性检查 -->

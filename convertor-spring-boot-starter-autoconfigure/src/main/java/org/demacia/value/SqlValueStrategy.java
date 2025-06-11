@@ -26,12 +26,12 @@ import java.util.Map;
 public class SqlValueStrategy implements ValueStrategy {
 
     @Resource
-    private RuleMapper apiMapper;
+    private RuleMapper ruleMapper;
 
     @Override
     public Object getValue(Map<String, Object> sourceMap, RuleMapping rule) {
         sourceMap.put("SQL", rule.getScript());
-        List<Map<String, Object>> resultMapList = apiMapper.select(sourceMap);
+        List<Map<String, Object>> resultMapList = ruleMapper.select(sourceMap);
         if (CollUtil.isEmpty(resultMapList)) {
             String message = StrUtil.isBlank(rule.getMessage()) ? String.format("rule = %s, script = %s, error: %s", rule, rule.getScript(), "解析SQL值为空") : StrFormatter.format(rule.getMessage(), sourceMap);
             throw new ConvertException(message);
