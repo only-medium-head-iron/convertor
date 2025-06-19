@@ -139,7 +139,7 @@ public class SendService extends AbstractService {
             throw new ConvertException("");
         }
         context.setApi(api);
-        context.setRuleCode(app.getAppCode() + StrUtil.DASHED + api.getServiceCode());
+        context.setRuleCode(app.getAppCode() + StrUtil.DASHED + api.getApiCode());
         context.setInternalRetry(sendRequest.isInternalRetry());
         if (context.isInternalRetry()) {
             String reqMsg = sendRequest.getRequestBody();

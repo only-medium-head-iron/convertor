@@ -253,10 +253,10 @@
   - 适用于接收请求
 - 请求报文格式（format）：定义接收请求时请求报文格式`format`，支持json、xml，不配置默认为`json`（**注：推送请求报文格式由`ApiService`配置决定**，支持json、xml、表单提交）
   
-  - 服务编码（serviceCode）：**必须配置**，定义具体的接口，根据对方请求方式决定
+  - 服务编码（apiCode）：**必须配置**，定义具体的接口，根据对方请求方式决定
 - 其他字段定义见代码`Req`类
 - 前置映射-PRE
-  - 接口级别规则，rule_id一般为appCode + serviceCode
+  - 接口级别规则，rule_id一般为appCode + apiCode
   - 适用于接收请求
   - 其他字段定义见代码`Pre`类
   

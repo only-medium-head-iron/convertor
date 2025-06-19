@@ -141,7 +141,7 @@ public class ReceiveService extends AbstractService {
         setReq(context, appCode);
         String apiCode = context.getReq().getApiCode();
         if (StrUtil.isBlank(apiCode)) {
-            throw new ConvertException("serviceCode服务编码不能为空");
+            throw new ConvertException("apiCode服务编码不能为空");
         }
         context.setRuleCode(appCode + StrUtil.DASHED + apiCode);
         setPre(context);
@@ -215,15 +215,15 @@ public class ReceiveService extends AbstractService {
      * 设置API服务信息到上下文对象中
      *
      * @param context     上下文对象，包含API应用相关信息
-     * @param serviceCode 服务代码，用于标识特定的服务
+     * @param apiCode 服务代码，用于标识特定的服务
      *                    <p>
      *                    通过上下文对象获取API应用ID和服务代码，查询对应的API服务信息
      *                    如果服务不存在，则抛出异常提示服务不存在
      *                    否则将查询到的服务信息设置到上下文对象中，供后续处理使用
      */
-    private void setApi(Context context, String serviceCode) {
+    private void setApi(Context context, String apiCode) {
         App app = context.getApp();
-        Api api = apiMapper.getApi(app.getId(), serviceCode);
+        Api api = apiMapper.getApi(app.getId(), apiCode);
         if (null == api) {
             throw new ConvertException("");
         }

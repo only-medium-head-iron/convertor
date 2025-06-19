@@ -9,7 +9,7 @@ import lombok.Data;
 @Data
 public class Api {
 
-    private String serviceCode;
+    private String apiCode;
 
     private String handler;
 
