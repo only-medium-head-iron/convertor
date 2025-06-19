@@ -136,16 +136,16 @@ public class ReceiveService extends AbstractService {
         String reqMsg = receiveRequest.getReqMsg();
         String appCode = receiveRequest.getAppCode();
         BeanUtil.copyProperties(receiveRequest, context);
-        setApiApp(context, appCode);
+        setApp(context, appCode);
         setParams(context, reqMsg);
         setReq(context, appCode);
-        String serviceCode = context.getReq().getServiceCode();
-        if (StrUtil.isBlank(serviceCode)) {
+        String apiCode = context.getReq().getApiCode();
+        if (StrUtil.isBlank(apiCode)) {
             throw new ConvertException("serviceCode服务编码不能为空");
         }
-        context.setRuleCode(appCode + StrUtil.DASHED + serviceCode);
+        context.setRuleCode(appCode + StrUtil.DASHED + apiCode);
         setPre(context);
-        setApiService(context, serviceCode);
+        setApi(context, apiCode);
     }
 
     /**
@@ -221,7 +221,7 @@ public class ReceiveService extends AbstractService {
      *                    如果服务不存在，则抛出异常提示服务不存在
      *                    否则将查询到的服务信息设置到上下文对象中，供后续处理使用
      */
-    private void setApiService(Context context, String serviceCode) {
+    private void setApi(Context context, String serviceCode) {
         App app = context.getApp();
         Api api = apiMapper.getApi(app.getId(), serviceCode);
         if (null == api) {
@@ -236,7 +236,7 @@ public class ReceiveService extends AbstractService {
      * @param context 上下文对象，用于存储API应用信息
      * @param appCode 应用代码，用于唯一标识一个应用
      */
-    private void setApiApp(Context context, String appCode) {
+    private void setApp(Context context, String appCode) {
         App app = appMapper.getApp(appCode);
         if (null == app) {
             throw new ConvertException("");

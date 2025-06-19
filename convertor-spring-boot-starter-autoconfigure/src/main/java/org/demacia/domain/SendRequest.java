@@ -9,8 +9,8 @@ import lombok.Data;
 @Data
 public class SendRequest {
     private String appCode;
-    private String serviceCode;
+    private String apiCode;
     private String bizNo;
-    private String reqMsg;
+    private String requestBody;
     private boolean internalRetry;
 }

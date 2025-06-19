@@ -56,5 +56,5 @@ public class Req {
      * <p>
      * 该代码用于唯一标识服务。
      */
-    private String serviceCode;
+    private String apiCode;
 }

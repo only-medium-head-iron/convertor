@@ -134,7 +134,7 @@ public class SendService extends AbstractService {
         }
         context.setApp(app);
         // 对应接口处理
-        Api api = apiMapper.getApi(app.getId(), sendRequest.getServiceCode());
+        Api api = apiMapper.getApi(app.getId(), sendRequest.getApiCode());
         if (null == api) {
             throw new ConvertException("");
         }
@@ -142,7 +142,7 @@ public class SendService extends AbstractService {
         context.setRuleCode(app.getAppCode() + StrUtil.DASHED + api.getServiceCode());
         context.setInternalRetry(sendRequest.isInternalRetry());
         if (context.isInternalRetry()) {
-            String reqMsg = sendRequest.getReqMsg();
+            String reqMsg = sendRequest.getRequestBody();
             context.setReqMsg(reqMsg);
             if (Const.MessageFormat.FORM.equals(api.getMessageFormat())) {
                 context.setTarget(JSONUtil.parseObj(reqMsg));
