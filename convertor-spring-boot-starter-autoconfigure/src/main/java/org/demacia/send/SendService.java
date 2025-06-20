@@ -130,13 +130,13 @@ public class SendService extends AbstractService {
         context.setParams(params);
         App app = appMapper.getApp(sendRequest.getAppCode());
         if (null == app) {
-            throw new ConvertException("");
+            throw new ConvertException("【{}】应用未配置", sendRequest.getAppCode());
         }
         context.setApp(app);
         // 对应接口处理
         Api api = apiMapper.getApi(app.getId(), sendRequest.getApiCode());
         if (null == api) {
-            throw new ConvertException("");
+            throw new ConvertException("【{}】接口未配置", sendRequest.getApiCode());
         }
         context.setApi(api);
         context.setRuleCode(app.getAppCode() + StrUtil.DASHED + api.getApiCode());
