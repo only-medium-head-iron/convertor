@@ -57,7 +57,7 @@ public class SendService extends AbstractService {
      * @param sendRequest 推送请求数据传输对象，包含推送所需的信息
      * @return Rsp 响应数据传输对象，包含处理结果和响应信息
      */
-    public Rsp handle(SendRequest sendRequest) {
+    public Rsp send(SendRequest sendRequest) {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         Rsp rsp = new Rsp();

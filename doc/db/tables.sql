@@ -13,7 +13,7 @@ create table app_config
     app_name     varchar(64)  not null default '' comment '应用名称',
     app_key      varchar(64)  not null default '' comment '应用键名',
     app_secret   varchar(128) not null default '' comment '应用密钥',
-    base_url     varchar(256) not null default '' comment '基础url',
+    base_url     varchar(256) not null default '' comment '基础URL',
     enabled      tinyint(1)   not null default 1 comment '启用状态：1-启用 0-禁用',
     remark       varchar(512) not null default '' comment '备注',
     created_by   varchar(64)  not null default 'system' comment '创建人',
@@ -28,7 +28,7 @@ drop table if exists api_config;
 create table api_config
 (
     id             bigint unsigned auto_increment primary key comment '主键id',
-    app_id         bigint unsigned not null comment '应用id',
+    app_id         bigint unsigned not null comment '应用ID',
     api_code       varchar(256) not null default '' comment '接口编码',
     api_name       varchar(256) not null default '' comment '接口名称',
     api_path       varchar(256) not null default '' comment '接口路径',
