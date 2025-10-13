@@ -48,6 +48,10 @@ public abstract class AbstractSendHandler implements SendHandler {
      */
     @Override
     public void handle(Context context) {
+
+        // 执行自定义流程步骤
+        runStepInSequence(context);
+
         // 转换前调用前置处理方法，默认实现查找货主仓库等信息
         beforeConvert(context);
 
@@ -60,8 +64,21 @@ public abstract class AbstractSendHandler implements SendHandler {
         // 转换后调用后置处理方法，默认实现推送处理逻辑
         afterConvert(context);
 
+        // 发送请求
+        doRequest(context);
+
         // 返回结果后调用处理方法，可以根据请求响应结果做相应的处理
         afterReturn(context);
+    }
+
+    /**
+     * 顺序执行步骤链中的步骤
+     * @param context 上下文对象，包含转换所需数据
+     */
+    private void runStepInSequence(Context context) {
+        for (Step step : this.steps) {
+            step.run(context);
+        }
     }
 
     /**
@@ -96,20 +113,23 @@ public abstract class AbstractSendHandler implements SendHandler {
      * @param context 转换上下文，包含可能需要传递给各个步骤的必要信息
      */
     public void beforeConvert(Context context) {
-        for (Step step : this.steps) {
-            step.run(context);
-        }
     }
 
     /**
      * 在对象转换后执行操作
-     * 此方法的目的是将对象转换为指定格式的消息，并通过HTTP/HTTPS发送
-     * 它首先将对象解析为map格式，然后根据消息类型确定消息格式
-     * 接着，它会构建URL和请求消息，最后通过HTTP/HTTPS客户端发送请求并处理响应
      *
      * @param context 上下文对象，包含API服务、应用等信息
      */
     public void afterConvert(Context context) {
+    }
+
+    /**
+     * 此方法的目的是将对象转换为指定格式的消息，并通过HTTP/HTTPS发送
+     * 它首先将对象解析为map格式，然后根据消息类型确定消息格式
+     * 接着，它会构建URL和请求消息，最后通过HTTP/HTTPS客户端发送请求并处理响应
+     * @param context 上下文对象，包含API服务、应用等信息
+     */
+    public void doRequest(Context context) {
         Map<String, Object> pathParams = buildPathParams(context);
         Map<String, String> headers = buildHeaders(context);
         String query = URLUtil.buildQuery(pathParams, StandardCharsets.UTF_8);

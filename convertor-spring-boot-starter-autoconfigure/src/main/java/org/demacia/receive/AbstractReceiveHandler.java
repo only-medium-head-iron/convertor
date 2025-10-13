@@ -32,6 +32,7 @@ public abstract class AbstractReceiveHandler implements ReceiveHandler {
      */
     @Override
     public Object handle(Context context) {
+        runStepInSequence(context);
         beforeConvert(context);
         Object object = convertor.convert(context.getRuleCode(), JacksonUtil.toMap(context));
         afterConvert(object);
@@ -47,14 +48,21 @@ public abstract class AbstractReceiveHandler implements ReceiveHandler {
     }
 
     /**
+     * 顺序执行步骤链中的步骤
+     * @param context 上下文对象，包含转换所需数据
+     */
+    private void runStepInSequence(Context context) {
+        for (Step step : this.steps) {
+            step.run(context);
+        }
+    }
+
+    /**
      * 在转换过程开始之前执行一系列步骤
      *
      * @param context 转换上下文，包含可能需要传递给各个步骤的必要信息
      */
     public void beforeConvert(Context context) {
-        for (Step step : steps) {
-            step.run(context);
-        }
     }
 
     /**
