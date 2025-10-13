@@ -34,9 +34,13 @@ public abstract class AbstractReceiveHandler implements ReceiveHandler {
     public Object handle(Context context) {
         runStepInSequence(context);
         beforeConvert(context);
-        Object object = convertor.convert(context.getRuleCode(), JacksonUtil.toMap(context));
+        Object object = convert(context);
         afterConvert(object);
         return object;
+    }
+
+    public Object convert(Context context) {
+        return convertor.convert(context.getRuleCode(), JacksonUtil.toMap(context));
     }
 
     /**
