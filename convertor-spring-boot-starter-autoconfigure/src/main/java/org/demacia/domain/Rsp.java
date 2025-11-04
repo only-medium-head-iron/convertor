@@ -13,7 +13,7 @@ public class Rsp {
     /**
      * 是否直接调用。
      * <p>
-     * 默认值为 {@code false}，用于区分是否记录日志。
+     * 默认值为 {@code false}。
      */
     private boolean success;
 
@@ -37,4 +37,11 @@ public class Rsp {
      * 记录模糊错误信息，供外部展示。
      */
     private String messageForExternal;
+
+    /**
+     * 返回数据。
+     * <p>
+     * 返回数据。
+     */
+    private Object data;
 }

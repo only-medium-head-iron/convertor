@@ -48,25 +48,12 @@ public abstract class AbstractSendHandler implements SendHandler {
      */
     @Override
     public void handle(Context context) {
-
-        // 执行自定义流程步骤
         runStepInSequence(context);
-
-        // 转换前调用前置处理方法，默认实现查找货主仓库等信息
         beforeConvert(context);
-
         Object object = convert(context);
-
-        // 根据配置的消息格式格式化请求消息
         formatRequestMessage(context, object);
-
-        // 转换后调用后置处理方法，默认实现推送处理逻辑
         afterConvert(context);
-
-        // 发送请求
         doRequest(context);
-
-        // 返回结果后调用处理方法，可以根据请求响应结果做相应的处理
         afterReturn(context);
     }
 
@@ -94,7 +81,7 @@ public abstract class AbstractSendHandler implements SendHandler {
         if (ObjectUtil.isEmpty(object)) {
             return;
         }
-        // 可以替换成 ObjectMapper.convertValue(object, Map.class)，进行逐级转换
+        // TODO 替换成 ObjectMapper.convertValue(object, Map.class)，进行逐级转换
         Map<String, Object> parseResult = BeanUtil.beanToMap(object);
         context.setTarget(parseResult);
         Api api = context.getApi();

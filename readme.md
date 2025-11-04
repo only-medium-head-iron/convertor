@@ -249,34 +249,34 @@
 
 - 请求映射-REQ
 
-  - 应用级别规则，rule_id一般为appCode
+  - 应用级别规则，rule_code一般为appCode
   - 适用于接收请求
 - 请求报文格式（format）：定义接收请求时请求报文格式`format`，支持json、xml，不配置默认为`json`（**注：推送请求报文格式由`ApiService`配置决定**，支持json、xml、表单提交）
   
   - 服务编码（apiCode）：**必须配置**，定义具体的接口，根据对方请求方式决定
 - 其他字段定义见代码`Req`类
 - 前置映射-PRE
-  - 接口级别规则，rule_id一般为appCode + apiCode
+  - 接口级别规则，rule_code一般为appCode + apiCode
   - 适用于接收请求
   - 其他字段定义见代码`Pre`类
   
 - 转换映射-DTO
   - 具体报文转换逻辑
-  - 通过rule_id与具体的转换规则的id对应，即每个转换规则都可以配置对应的映射
+  - 通过rule_code与具体的转换规则的id对应，即每个转换规则都可以配置对应的映射
 
 #### 4、推送请求
 
 - 转换映射-DTO
   - 具体报文转换逻辑
 
-  - 通过rule_id与具体的转换规则的id对应，即每个转换规则都可以配置对应的映射
+  - 通过rule_code与具体的转换规则的id对应，即每个转换规则都可以配置对应的映射
 - 请求头映射-RHD
-  - 应用级别规则，rule_id一般为appCode
+  - 应用级别规则，rule_code一般为appCode
   - 适用于推送请求
   - 请求外部时需要放置请求头参数
 
 - 地址栏映射-URL
-  - 应用级别规则，rule_id一般为appCode
+  - 应用级别规则，rule_code一般为appCode
   - 适用于推送请求
   - 请求外部时需要拼接在地址栏的参数，即问号后面的参数。例：http://localhost:8080/api?method=deliveryOrder.create
 
@@ -293,7 +293,7 @@
 
 ### 四、合并规则
 
-- 说明：对转换后的List进行合并，通过rule_id与具体的转换规则的id对应，即每个转换规则都可以配置对应的合并规则
+- 说明：对转换后的List进行合并，通过rule_code与具体的转换规则的id对应，即每个转换规则都可以配置对应的合并规则
 
 - 简单合并逻辑配置：配置分组字段、合并字段、排序字段。（**注：以目标字段配置**）
   - | 合并处理器 |     分组字段     |       合并字段        |           排序字段           |
@@ -419,7 +419,7 @@
   - 入库实际表生产日期、到期日期类型是LocalDate，出库为LocalDateTime。转换json后变为数组: [2019, 11, 30]，source配置为：`StrUtil.join("-", productDate) + ' 00:00:00'`
 - 推送场景：原入库单与出库单定义的DTO（InboundDataPushReqDTO）层级结构不一致：入库单多了一层，所以在配置入库出库都适用的规则时，需要注意添加一层
 - 重试场景：双汇ERP重试需要多配置一条重试规则（因为签名在请求体中）
-  - 参考：`select * from cim_rule_convert where rule_id = 'SHERP-erp.callback'`
+  - 参考：`select * from cim_rule_convert where rule_code = 'SHERP-erp.callback'`
   - 其他推送的重试只需要在现有`转换规则-条件`处配置：`internalRetry == false`
 - 新增Handler：如有新增接收 DTO，需要新增字典：`select * from system_dict_type where name = '类全限定名' and type = 'cim_class_name';`
 
