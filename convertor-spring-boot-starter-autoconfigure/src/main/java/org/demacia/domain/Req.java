@@ -24,9 +24,9 @@ public class Req {
     private String rcvSign;
 
     /**
-     * OMS生成的签名。
+     * 生成的签名。
      * <p>
-     * OMS生成的签名。
+     * 生成的签名。
      */
     private String genSign;
 
@@ -45,9 +45,9 @@ public class Req {
     private Long timestamp;
 
     /**
-     * 应用代码，用于标识应用系统。
+     * 应用代码，用于标识应用。
      * <p>
-     * 该代码用于唯一标识应用系统。
+     * 该代码用于唯一标识应用。
      */
     private String appCode;
 
