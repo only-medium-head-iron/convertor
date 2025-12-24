@@ -1,0 +1,36 @@
+package ${entityPackage};
+
+import com.mybatisflex.annotation.Id;
+import com.mybatisflex.annotation.Table;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import lombok.experimental.Accessors;
+## 判断是否有日期字段
+#set($hasDateField = false)
+#foreach($column in $columns)
+    #if($column.javaTypeSimpleName == "LocalDateTime" || $column.javaTypeSimpleName == "LocalDate")
+        #set($hasDateField = true)
+    #end
+#end
+#if($hasDateField)
+import java.time.LocalDateTime;
+#end
+
+/**
+ * ${comment}
+ */
+@Data
+@Accessors(chain = true)
+@Table("${tableName}")
+public class ${entityName} {
+#foreach($column in $columns)
+/**
+ * ${column.comment}
+ */
+    #if($column.isPrimary)
+    @Id#if($column.autoIncrement)(keyType = com.mybatisflex.annotation.KeyType.Auto)#end
+    #end
+    private ${column.javaTypeSimpleName} ${column.propertyName};
+
+#end
+}

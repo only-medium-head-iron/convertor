@@ -1,0 +1,56 @@
+package ${requestPackage};
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import com.mybatisflex.core.paginate.Page;
+
+/**
+ * ${comment}分页查询请求
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@Schema(description = "${comment}分页查询请求")
+public class ${entityName}PageQuery extends Page<${entityName}RespVO> {
+
+    @Schema(description = "关键词搜索")
+    private String keyword;
+
+    #foreach($column in $columns)
+        #if(!$column.isPrimary && !$column.isLogicDelete && !$column.isTimestampField && ($column.dataType == "varchar" || $column.dataType == "char" || $column.dataType == "text"))
+    @Schema(description = "${column.comment}")
+    private ${column.javaTypeSimpleName} ${column.propertyName};
+
+        #end
+    #end
+    #foreach($column in $columns)
+        #if(!$column.isPrimary && !$column.isLogicDelete && !$column.isTimestampField && ($column.dataType == "int" || $column.dataType == "tinyint" || $column.dataType == "smallint" || $column.dataType == "bigint" || $column.dataType == "integer"))
+    @Schema(description = "${column.comment}")
+    private ${column.javaTypeSimpleName} ${column.propertyName};
+
+        #end
+    #end
+##    #foreach($column in $columns)
+##        #if($column.isTimestampField)
+##            @Schema(description = "${column.comment}开始，格式：yyyy-MM-dd HH:mm:ss")
+##            private String ${column.propertyName}Start;
+##
+##            @Schema(description = "${column.comment}结束，格式：yyyy-MM-dd HH:mm:ss")
+##            private String ${column.propertyName}End;
+##
+##        #end
+##    #end
+    @Schema(description = "排序字段")
+    private String sortField = "create_time";
+
+    @Schema(description = "排序方式：asc/desc", allowableValues = {"asc", "desc"})
+    private String sortOrder = "desc";
+
+    /**
+     * 默认构造函数
+     */
+    public ${entityName}PageQuery() {
+        this.setPageNumber(1);
+        this.setPageSize(10);
+    }
+}

@@ -1,0 +1,32 @@
+package ${responsePackage};
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+## 判断是否有日期字段
+#set($hasDateField = false)
+#foreach($column in $columns)
+    #if(($column.javaTypeSimpleName == "LocalDateTime" || $column.javaTypeSimpleName == "LocalDate") && !$column.isLogicDelete)
+        #set($hasDateField = true)
+    #end
+#end
+#if($hasDateField)
+import java.time.LocalDateTime;
+#end
+
+/**
+ * ${comment}响应对象
+ */
+@Data
+@Schema(description = "${comment}响应对象")
+public class ${entityName}RespVO {
+#foreach($column in $columns)
+#if(!$column.isLogicDelete)
+    /**
+     * ${column.comment}
+     */
+    @Schema(description = "${column.comment}")
+    private ${column.javaTypeSimpleName} ${column.propertyName};
+
+#end
+#end
+}

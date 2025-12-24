@@ -1,0 +1,47 @@
+package ${servicePackage};
+
+import ${requestPackage}.${entityName}CreateReq;
+import ${requestPackage}.${entityName}UpdateReq;
+import ${requestPackage}.${entityName}PageQuery;
+import ${responsePackage}.${entityName}RespVO;
+import ${entityPackage}.${entityName};
+import com.mybatisflex.core.paginate.Page;
+import com.mybatisflex.core.service.IService;
+
+import java.util.List;
+
+/**
+ * ${comment}服务接口
+ */
+public interface ${entityName}Service extends IService<${entityName}> {
+
+    /**
+     * 创建${comment}
+     */
+    Long create(${entityName}CreateReq req);
+
+    /**
+     * 更新${comment}
+     */
+    Boolean update(${entityName}UpdateReq req);
+
+    /**
+     * 删除${comment}
+     */
+    Boolean delete(Long id);
+
+    /**
+     * 批量删除${comment}
+     */
+    Boolean batchDelete(List<Long> ids);
+
+    /**
+     * 根据ID获取${comment}详情
+     */
+    ${entityName}RespVO getById(Long id);
+
+    /**
+     * 分页查询${comment}
+     */
+    Page<${entityName}RespVO> pageQuery(${entityName}PageQuery query);
+}

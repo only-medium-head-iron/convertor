@@ -1,0 +1,100 @@
+package ${serviceImplPackage};
+
+import ${requestPackage}.${entityName}CreateReq;
+import ${requestPackage}.${entityName}UpdateReq;
+import ${requestPackage}.${entityName}PageQuery;
+import ${responsePackage}.${entityName}RespVO;
+import ${entityPackage}.${entityName};
+import ${mapperPackage}.${entityName}Mapper;
+import ${servicePackage}.${entityName}Service;
+import com.mybatisflex.core.paginate.Page;
+import com.mybatisflex.core.query.QueryWrapper;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import javax.annotation.Resource;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static ${tableDefPackage}.${entityName}TableDef.${tableConstantName};
+
+/**
+ * ${comment}服务实现
+ */
+@Slf4j
+@Service
+public class ${entityName}ServiceImpl implements ${entityName}Service {
+
+    @Resource
+    private ${entityName}Mapper ${entityVariable}Mapper;
+
+    @Override
+    public Page<${entityName}RespVO> pageQuery(${entityName}PageQuery query) {
+        QueryWrapper queryWrapper = QueryWrapper.create()
+                .select()
+                .from(${tableConstantName})
+                .where(${tableConstantName}.DELETED.eq(0));
+
+        // 关键词搜索
+        if (query.getKeyword() != null && !query.getKeyword().trim().isEmpty()) {
+            queryWrapper.and(
+                        ${tableConstantName}.CONFIG_KEY.like("%" + query.getKeyword() + "%")
+                    .or(${tableConstantName}.CONFIG_NAME.like("%" + query.getKeyword() + "%"))
+                    .or(${tableConstantName}.DESCRIPTION.like("%" + query.getKeyword() + "%"))
+            );
+        }
+
+        // 状态筛选
+        if (query.getStatus() != null) {
+            queryWrapper.and(${tableConstantName}.STATUS.eq(query.getStatus()));
+        }
+
+        // 创建时间范围
+        if (query.getCreateTimeStart() != null && !query.getCreateTimeStart().isEmpty()) {
+            queryWrapper.and(${tableConstantName}.CREATE_TIME.ge(query.getCreateTimeStart()));
+        }
+        if (query.getCreateTimeEnd() != null && !query.getCreateTimeEnd().isEmpty()) {
+            queryWrapper.and(${tableConstantName}.CREATE_TIME.le(query.getCreateTimeEnd()));
+        }
+
+        // 排序
+        if ("desc".equalsIgnoreCase(query.getSortOrder())) {
+            queryWrapper.orderBy(${tableConstantName}.CREATE_TIME.desc());
+        } else {
+            queryWrapper.orderBy(${tableConstantName}.CREATE_TIME.asc());
+        }
+
+        Page<${entityName}> page = ${entityVariable}Mapper.paginate(
+                query.getPageNumber(),
+                query.getPageSize(),
+                queryWrapper
+        );
+
+        // 转换为VO
+        List<${entityName}RespVO> voList = page.getRecords().stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
+
+        Page<${entityName}RespVO> voPage = new Page<>();
+        voPage.setPageNumber(page.getPageNumber());
+        voPage.setPageSize(page.getPageSize());
+        voPage.setTotalRow(page.getTotalRow());
+        voPage.setRecords(voList);
+
+        return voPage;
+    }
+
+    private ${entityName}RespVO convertToVO(${entityName} entity) {
+        if (entity == null) {
+            return null;
+        }
+
+            ${entityName}RespVO vo = new ${entityName}RespVO();
+        BeanUtils.copyProperties(entity, vo);
+        return vo;
+    }
+}

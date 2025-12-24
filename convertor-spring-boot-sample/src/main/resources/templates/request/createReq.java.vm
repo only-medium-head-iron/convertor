@@ -1,0 +1,61 @@
+package ${requestPackage};
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+#if($hasNotBlank || $hasNotNull)
+import javax.validation.constraints.*;
+#end
+#if($hasSize)
+import javax.validation.constraints.Size;
+#end
+#if($hasMinMax)
+import javax.validation.constraints.Min;
+import javax.validation.constraints.Max;
+#end
+
+/**
+ * 创建${comment}请求
+ */
+@Data
+@Schema(description = "创建${comment}请求")
+public class ${entityName}CreateReq {
+#foreach($column in $columns)
+#if(!$column.isPrimary && !$column.isLogicDelete && !$column.isTimestampField)
+
+    /**
+     * ${column.comment}
+     */
+    #if(!$column.nullable)
+    @Schema(description = "${column.comment}", requiredMode = Schema.RequiredMode.REQUIRED)
+    #else
+    @Schema(description = "${column.comment}")
+    #end
+    #if(!$column.nullable && $column.javaTypeSimpleName == "String")
+    @NotBlank(message = "${column.comment}不能为空")
+    #elseif(!$column.nullable && ($column.javaTypeSimpleName == "Long" || $column.javaTypeSimpleName == "Integer" || $column.javaTypeSimpleName == "Double" || $column.javaTypeSimpleName == "Float" || $column.javaTypeSimpleName == "Boolean"))
+    @NotNull(message = "${column.comment}不能为空")
+    #end
+    #if($column.dataType == "varchar" && $column.charMaxLength > 0)
+    @Size(max = ${column.charMaxLength}, message = "${column.comment}长度不能超过${column.charMaxLength}个字符")
+    #elseif($column.dataType == "char" && $column.charMaxLength > 0)
+    @Size(max = ${column.charMaxLength}, message = "${column.comment}长度不能超过${column.charMaxLength}个字符")
+    #end
+    #if($column.javaTypeSimpleName == "Integer" && $column.dataType == "tinyint" && $column.columnType && $column.columnType.contains("(1)"))
+    // 布尔类型字段
+    #elseif($column.javaTypeSimpleName == "Integer" && $column.dataType == "tinyint")
+    @Min(value = -128, message = "${column.comment}值不能小于-128")
+    @Max(value = 127, message = "${column.comment}值不能大于127")
+    #elseif($column.javaTypeSimpleName == "Integer" && $column.dataType == "smallint")
+    @Min(value = -32768, message = "${column.comment}值不能小于-32768")
+    @Max(value = 32767, message = "${column.comment}值不能大于32767")
+    #elseif($column.javaTypeSimpleName == "Integer")
+    @Min(value = -2147483648, message = "${column.comment}值不能小于-2147483648")
+    @Max(value = 2147483647, message = "${column.comment}值不能大于2147483647")
+    #elseif($column.javaTypeSimpleName == "Long")
+    @Min(value = -9223372036854775808, message = "${column.comment}值不能小于-9223372036854775808")
+    @Max(value = 9223372036854775807, message = "${column.comment}值不能大于9223372036854775807")
+    #end
+    private ${column.javaTypeSimpleName} ${column.propertyName};
+#end
+#end
+}
