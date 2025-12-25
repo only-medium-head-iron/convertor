@@ -146,18 +146,13 @@ public class FixedModuleGenerator {
                 return "Long";
             case "int":
             case "integer":
+            case "smallint":
                 return "Integer";
             case "tinyint":
                 if (columnType != null && columnType.toLowerCase().contains("tinyint(1)")) {
                     return "Boolean";
                 }
                 return "Integer";
-            case "smallint":
-                return "Integer";
-            case "varchar":
-            case "char":
-            case "text":
-                return "String";
             case "datetime":
             case "timestamp":
                 return "LocalDateTime";
