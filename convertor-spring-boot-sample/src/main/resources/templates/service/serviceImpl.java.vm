@@ -64,21 +64,17 @@ public class ${entityName}ServiceImpl implements ${entityName}Service {
         #end;
 
         // 排序
-        if (StringUtils.hasText(query.getSortField())) {
-            if ("desc".equalsIgnoreCase(query.getSortOrder())) {
-                queryWrapper.orderBy(${tableConstantName}.column(query.getSortField().toUpperCase()).desc());
-            } else {
-                queryWrapper.orderBy(${tableConstantName}.column(query.getSortField().toUpperCase()).asc());
-            }
-        } else {
-            queryWrapper.orderBy(${tableConstantName}.CREATE_TIME.desc());
-        }
+##        if (StringUtils.hasText(query.getSortField())) {
+##            if ("desc".equalsIgnoreCase(query.getSortOrder())) {
+##                queryWrapper.orderBy(${tableConstantName}.column(query.getSortField().toUpperCase()).desc());
+##            } else {
+##                queryWrapper.orderBy(${tableConstantName}.column(query.getSortField().toUpperCase()).asc());
+##            }
+##        } else {
+##            queryWrapper.orderBy(${tableConstantName}.CREATE_TIME.desc());
+##        }
 
-        Page<${entityName}> page = ${entityVariable}Mapper.paginate(
-                query.getPageNumber(),
-                query.getPageSize(),
-                queryWrapper
-        );
+        Page<${entityName}> page = ${entityVariable}Mapper.paginate(query.getPageNumber(), query.getPageSize(), queryWrapper);
 
         // 转换为VO
         List<${entityName}RespVO> voList = page.getRecords().stream()

@@ -19,20 +19,16 @@ public class ${entityName}PageQuery extends Page<${entityName}RespVO> {
     private String keyword;
 
     #foreach($column in $columns)
-        #if(!$column.isPrimary && !$column.isLogicDelete && !$column.isTimestampField && ($column.dataType == "varchar" || $column.dataType == "char" || $column.dataType == "text"))
+        #if(!$column.isPrimary && !$column.isLogicDelete && !$column.isTimestampField
+        && ($column.dataType == "varchar" || $column.dataType == "char"
+        || $column.dataType == "text" || $column.dataType == "int"
+        || $column.dataType == "tinyint" || $column.dataType == "smallint"
+        || $column.dataType == "bigint" || $column.dataType == "integer"
+        || $column.dataType == "bit"))
     @Schema(description = "${column.comment}")
     private ${column.javaTypeSimpleName} ${column.propertyName};
 
         #end
-    #end
-    #foreach($column in $columns)
-        #if(!$column.isPrimary && !$column.isLogicDelete && !$column.isTimestampField && ($column.dataType == "int" || $column.dataType == "tinyint" || $column.dataType == "smallint" || $column.dataType == "bigint" || $column.dataType == "integer"))
-    @Schema(description = "${column.comment}")
-    private ${column.javaTypeSimpleName} ${column.propertyName};
-
-        #end
-    #end
-    #foreach($column in $columns)
         #if($column.isTimestampField)
     @Schema(description = "${column.comment}, example = [2026-01-01 00:00:00, 2026-01-31 23:59:59]")
     private LocalDateTime[] ${column.propertyName};
