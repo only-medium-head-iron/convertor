@@ -122,7 +122,7 @@ public class FixedModuleGenerator {
                     column.put("isLogicDelete", isLogicDeleteField(columnName));
 
                     // 判断是否为时间戳字段
-                    column.put("isTimestampField", isTimestampField(columnName));
+                    column.put("isTimestampField", isTimestampField(dataType));
 
                     // 添加jdbcType映射
                     String jdbcType = getJdbcType(dataType);
@@ -210,15 +210,16 @@ public class FixedModuleGenerator {
     }
 
     private static boolean isLogicDeleteField(String columnName) {
-        return columnName.toLowerCase().equals("deleted") ||
-                columnName.toLowerCase().equals("is_deleted") ||
+        return columnName.equalsIgnoreCase("deleted") ||
+                columnName.equalsIgnoreCase("is_deleted") ||
                 columnName.toLowerCase().endsWith("_deleted");
     }
 
-    private static boolean isTimestampField(String columnName) {
-        return columnName.toLowerCase().contains("time") ||
-                columnName.toLowerCase().contains("date") ||
-                columnName.toLowerCase().endsWith("_at");
+    private static boolean isTimestampField(String dataType) {
+        dataType = dataType.toLowerCase();
+        return "datetime".equals(dataType) ||
+                "timestamp".equals(dataType) ||
+                "date".equals(dataType);
     }
 
     private static String toCamelCase(String str, boolean firstUpper) {
@@ -339,7 +340,6 @@ public class FixedModuleGenerator {
                 (String) context.get("responsePackage"),
                 (String) context.get("servicePackage"),
                 (String) context.get("serviceImplPackage"),
-                (String) context.get("tableDefPackage")
         };
 
         for (String pkg : packages) {

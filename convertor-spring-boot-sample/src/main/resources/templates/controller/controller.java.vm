@@ -5,7 +5,7 @@ import ${requestPackage}.${entityName}UpdateReq;
 import ${requestPackage}.${entityName}PageQuery;
 import ${responsePackage}.${entityName}RespVO;
 import ${servicePackage}.${entityName}Service;
-import com.wt.wbp.tms.common.CommonResult;
+import org.demacia.common.CommonResult;
 import com.mybatisflex.core.paginate.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,7 +18,7 @@ import javax.annotation.Resource;
  * ${comment} 控制器
  */
 @RestController
-@RequestMapping("/api/${module}/${entityVariable}")
+@RequestMapping("/${module}/${entityVariable}")
 @Tag(name = "${comment}管理")
 public class ${entityName}Controller {
 
@@ -29,34 +29,34 @@ public class ${entityName}Controller {
     @Operation(summary = "创建${comment}")
     public CommonResult<Long> create(@Validated @RequestBody ${entityName}CreateReq req) {
         Long id = ${entityVariable}Service.create(req);
-        return CommonResult.success(id, "创建${comment}成功");
+        return CommonResult.success(id);
     }
 
     @PutMapping("/update")
     @Operation(summary = "更新${comment}")
     public CommonResult<Boolean> update(@Validated @RequestBody ${entityName}UpdateReq req) {
         Boolean result = ${entityVariable}Service.update(req);
-        return CommonResult.success(result, result ? "更新${comment}成功" : "更新${comment}失败");
+        return CommonResult.success(result);
     }
 
     @DeleteMapping("/delete/{id}")
     @Operation(summary = "删除${comment}")
     public CommonResult<Boolean> delete(@PathVariable Long id) {
         Boolean result = ${entityVariable}Service.delete(id);
-        return CommonResult.success(result, result ? "删除${comment}成功" : "删除${comment}失败");
+        return CommonResult.success(result);
     }
 
     @PostMapping("/page-query")
     @Operation(summary = "分页查询${comment}")
     public CommonResult<Page<${entityName}RespVO>> pageQuery(@Validated @RequestBody ${entityName}PageQuery query) {
         Page<${entityName}RespVO> result = ${entityVariable}Service.pageQuery(query);
-        return CommonResult.success(result, "查询${comment}成功");
+        return CommonResult.success(result);
     }
 
     @GetMapping("/get/{id}")
     @Operation(summary = "获取${comment}详情")
     public CommonResult<${entityName}RespVO> getById(@PathVariable Long id) {
         ${entityName}RespVO result = ${entityVariable}Service.getById(id);
-        return CommonResult.success(result, result != null ? "获取${comment}成功" : "${comment}不存在");
+        return CommonResult.success(result);
     }
 }

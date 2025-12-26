@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import com.mybatisflex.core.paginate.Page;
 
+import java.time.LocalDateTime;
+
 /**
  * ${comment}分页查询请求
  */
@@ -30,16 +32,13 @@ public class ${entityName}PageQuery extends Page<${entityName}RespVO> {
 
         #end
     #end
-##    #foreach($column in $columns)
-##        #if($column.isTimestampField)
-##            @Schema(description = "${column.comment}开始，格式：yyyy-MM-dd HH:mm:ss")
-##            private String ${column.propertyName}Start;
-##
-##            @Schema(description = "${column.comment}结束，格式：yyyy-MM-dd HH:mm:ss")
-##            private String ${column.propertyName}End;
-##
-##        #end
-##    #end
+    #foreach($column in $columns)
+        #if($column.isTimestampField)
+    @Schema(description = "${column.comment}, example = [2026-01-01 00:00:00, 2026-01-31 23:59:59]")
+    private LocalDateTime[] ${column.propertyName};
+
+        #end
+    #end
     @Schema(description = "排序字段")
     private String sortField = "create_time";
 
