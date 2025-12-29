@@ -3,7 +3,6 @@ package ${requestPackage};
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import com.mybatisflex.core.paginate.Page;
 import org.demacia.common.PageParams;
 
 import java.time.LocalDateTime;

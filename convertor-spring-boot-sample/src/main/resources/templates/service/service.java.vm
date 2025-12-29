@@ -33,7 +33,7 @@ public interface ${entityName}Service {
     /**
      * 根据ID获取${comment}详情
      */
-    ${entityName} getById(Long id);
+    ${entityName}PO getById(Long id);
 
     /**
      * 分页查询${comment}

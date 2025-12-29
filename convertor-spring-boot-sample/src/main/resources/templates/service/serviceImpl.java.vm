@@ -1,5 +1,6 @@
 package ${serviceImplPackage};
 
+import cn.hutool.core.bean.BeanUtil;
 import ${requestPackage}.${entityName}CreateReq;
 import ${requestPackage}.${entityName}UpdateReq;
 import ${requestPackage}.${entityName}PageQuery;
@@ -35,10 +36,10 @@ public class ${entityName}ServiceImpl implements ${entityName}Service {
     @Override
     public Long create(${entityName}CreateReq req) {
         // 1. 转换实体对象
-        ${entityName} ${entityVariable} = BeanUtil.toBean(req, ${entityName}.class);
+        ${entityName}PO ${entityVariable}PO = BeanUtil.toBean(req, ${entityName}.class);
 
         // 2. 保存到数据库
-        ${entityVariable}Mapper.insert(entity, true);
+        ${entityVariable}Mapper.insert(${entityVariable}, true);
 
         // 3. 返回新增结果
         return ${entityVariable}.getId();
@@ -47,10 +48,10 @@ public class ${entityName}ServiceImpl implements ${entityName}Service {
     @Override
     public Boolean update(${entityName}UpdateReq req) {
         // 1. 校验是否存在
-        ${entityName} ${entityVariable} = validateExists(req.getId());
+        ${entityName}PO existing = validateExists(req.getId());
 
         // 2. 转换实体对象
-        ${entityName} ${entityVariable} = BeanUtil.toBean(req, ${entityName}.class);
+        ${entityName}PO ${entityVariable}PO = BeanUtil.toBean(req, ${entityName}.class);
 
         // 3. 更新到数据库
         int result = ${entityVariable}Mapper.update(existing);
@@ -61,7 +62,7 @@ public class ${entityName}ServiceImpl implements ${entityName}Service {
     @Override
     public Boolean delete(Long id) {
         // 1. 校验是否存在
-        ${entityName} ${entityVariable} = validateExists(req.getId());
+        ${entityName}PO ${entityVariable}PO = validateExists(id);
 
         // 2. 根据主键删除
         int result = ${entityVariable}Mapper.deleteById(id);
@@ -70,7 +71,7 @@ public class ${entityName}ServiceImpl implements ${entityName}Service {
     }
 
     @Override
-    public ${entityName} getById(Long id) {
+    public ${entityName}PO getById(Long id) {
         return ${entityVariable}Mapper.selectOneById(id);
     }
 
@@ -105,7 +106,7 @@ public class ${entityName}ServiceImpl implements ${entityName}Service {
             #end
         #end;
 
-        // 排序
+##        // 排序
 ##        if (StringUtils.hasText(query.getSortField())) {
 ##            if ("desc".equalsIgnoreCase(query.getSortOrder())) {
 ##                queryWrapper.orderBy(${tableConstantName}.column(query.getSortField().toUpperCase()).desc());
@@ -115,8 +116,7 @@ public class ${entityName}ServiceImpl implements ${entityName}Service {
 ##        } else {
 ##            queryWrapper.orderBy(${tableConstantName}.CREATE_TIME.desc());
 ##        }
-
-        Page<${entityName}> page = ${entityVariable}Mapper.paginate(query.getPageNumber(), query.getPageSize(), queryWrapper);
+        Page<${entityName}PO> page = ${entityVariable}Mapper.paginate(query.getPageNo(), query.getPageSize(), queryWrapper);
 
         // 转换为VO
         List<${entityName}RespVO> voList = page.getRecords().stream()
@@ -132,12 +132,12 @@ public class ${entityName}ServiceImpl implements ${entityName}Service {
         return voPage;
     }
 
-    private ${entityName}RespVO convertToVO(${entityName} entity) {
+    private ${entityName}RespVO convertToVO(${entityName}PO entity) {
         if (entity == null) {
             return null;
         }
 
-            ${entityName}RespVO vo = new ${entityName}RespVO();
+        ${entityName}RespVO vo = new ${entityName}RespVO();
         BeanUtils.copyProperties(entity, vo);
         return vo;
     }
@@ -146,15 +146,14 @@ public class ${entityName}ServiceImpl implements ${entityName}Service {
      * 校验数据是否存在
      *
      * @param id 主键
-     * @return ${entityName}
+     * @return ${entityName}PO
      */
-    private ${entityName} validateExists(${entityName}UpdateReq req) {
-        Long id = req.getId();
-        ${entityName} ${entityVariable} = ${entityVariable}Mapper.selectOneById(id);
-        if (${entityVariable} == null) {
+    private ${entityName}PO validateExists(Long id) {
+        ${entityName}PO ${entityVariable}PO = ${entityVariable}Mapper.selectOneById(id);
+        if (${entityVariable}PO == null) {
             throw new RuntimeException("${comment}不存在");
         }
 
-        return ${entityVariable};
+        return ${entityVariable}PO;
     }
 }

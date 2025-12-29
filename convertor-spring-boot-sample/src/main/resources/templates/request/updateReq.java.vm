@@ -36,7 +36,7 @@ public class ${entityName}UpdateReq {
 #end
 #end
 #foreach($column in $columns)
-#if(!$column.isPrimary && !$column.isLogicDelete && !$column.isTimestampField)
+#if(!$column.isPrimary && !$column.isLogicDelete && !$column.isTimestampField && !$column.isBaseEntityField)
     /**
      * ${column.comment}
      */

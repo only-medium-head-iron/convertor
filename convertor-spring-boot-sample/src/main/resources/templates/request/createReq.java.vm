@@ -20,7 +20,7 @@ import javax.validation.constraints.Max;
 @Schema(description = "创建${comment}请求")
 public class ${entityName}CreateReq {
 #foreach($column in $columns)
-#if(!$column.isPrimary && !$column.isLogicDelete)
+#if(!$column.isPrimary && !$column.isLogicDelete && !$column.isBaseEntityField)
 
     /**
      * ${column.comment}

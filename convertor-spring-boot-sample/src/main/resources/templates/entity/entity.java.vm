@@ -3,9 +3,9 @@ package ${entityPackage};
 import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.Table;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
-import ($commonPackage).BaseEntity;
-import java.time.LocalDateTime;
+import ${commonPackage}.BaseEntity;
 ## 判断是否有日期字段
 #if($hasLocalDateTime)
 import java.time.LocalDateTime;
@@ -19,8 +19,9 @@ import java.time.LocalDate;
  */
 @Data
 @Accessors(chain = true)
+@EqualsAndHashCode(callSuper = true)
 @Table("${tableName}")
-public class ${entityName} extends BaseEntity {
+public class ${entityName}PO extends BaseEntity {
 #foreach($column in $columns)
     /**
      * ${column.comment}
