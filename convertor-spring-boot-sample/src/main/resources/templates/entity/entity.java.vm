@@ -5,6 +5,8 @@ import com.mybatisflex.annotation.Table;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
+
+import java.time.LocalDateTime;
 ## 判断是否有日期字段
 #set($hasDateField = false)
 #foreach($column in $columns)

@@ -22,11 +22,11 @@ public class FixedModuleGenerator {
         System.out.println("开始生成动态字段代码...");
 
         HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl("jdbc:mysql://rm-wz9osma53ib32tf1npo.mysql.rds.aliyuncs.com:6603/wt_otms?allowMultiQueries=true");
+        dataSource.setJdbcUrl("jdbc:mysql://rm-wz9osma53ib32tf1npo.mysql.rds.aliyuncs.com:6603/wt_vms?allowMultiQueries=true");
         dataSource.setUsername("omsroot");
         dataSource.setPassword("MysqlSAsls90");
 
-        List<String> tables = Arrays.asList("app_config");
+        List<String> tables = Arrays.asList("mdm_car");
 
         for (String tableName : tables) {
             System.out.println("正在生成表: " + tableName);
@@ -38,10 +38,10 @@ public class FixedModuleGenerator {
             String entityVariable = toCamelCase(tableName, false);
 
             // 获取表注释
-            String tableComment = getTableComment(dataSource, "wt_otms", tableName);
+            String tableComment = getTableComment(dataSource, "wt_vms", tableName);
 
             // 获取表字段信息
-            List<Map<String, Object>> columns = fetchColumnDetails(dataSource, "wt_otms", tableName);
+            List<Map<String, Object>> columns = fetchColumnDetails(dataSource, "wt_vms", tableName);
 
             // 生成所有代码
             generateAllCode(module, tableName, entityName, entityVariable, tableComment, columns);
@@ -184,12 +184,8 @@ public class FixedModuleGenerator {
                 return "TINYINT";
             case "smallint":
                 return "SMALLINT";
-            case "varchar":
-                return "VARCHAR";
             case "char":
                 return "CHAR";
-            case "text":
-                return "VARCHAR";
             case "datetime":
             case "timestamp":
                 return "TIMESTAMP";

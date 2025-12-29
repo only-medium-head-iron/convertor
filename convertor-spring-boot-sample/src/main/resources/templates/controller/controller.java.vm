@@ -36,14 +36,14 @@ public class ${entityName}Controller {
     @Operation(summary = "更新${comment}")
     public CommonResult<Boolean> update(@Validated @RequestBody ${entityName}UpdateReq req) {
         Boolean result = ${entityVariable}Service.update(req);
-        return CommonResult.success(result);
+        return CommonResult.result(result);
     }
 
     @DeleteMapping("/delete/{id}")
     @Operation(summary = "删除${comment}")
     public CommonResult<Boolean> delete(@PathVariable Long id) {
         Boolean result = ${entityVariable}Service.delete(id);
-        return CommonResult.success(result);
+        return CommonResult.result(result);
     }
 
     @PostMapping("/page-query")

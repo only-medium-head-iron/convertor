@@ -41,6 +41,13 @@ public class CommonResult<T> implements Serializable {
     /**
      * 成功返回结果
      */
+    public static <T> CommonResult<T> result(Boolean success) {
+        return success(null, success ? "操作成功" : "操作失败");
+    }
+
+    /**
+     * 成功返回结果
+     */
     public static <T> CommonResult<T> success() {
         return success(null, "操作成功");
     }

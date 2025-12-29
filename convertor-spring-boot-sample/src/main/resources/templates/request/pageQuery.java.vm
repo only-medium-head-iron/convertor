@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import com.mybatisflex.core.paginate.Page;
+import org.demacia.common.PageParams;
 
 import java.time.LocalDateTime;
 
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Schema(description = "${comment}分页查询请求")
-public class ${entityName}PageQuery extends Page<${entityName}RespVO> {
+public class ${entityName}PageQuery extends PageParams {
 
     @Schema(description = "关键词搜索")
     private String keyword;
@@ -40,12 +41,4 @@ public class ${entityName}PageQuery extends Page<${entityName}RespVO> {
 
     @Schema(description = "排序方式：asc/desc", allowableValues = {"asc", "desc"})
     private String sortOrder = "desc";
-
-    /**
-     * 默认构造函数
-     */
-    public ${entityName}PageQuery() {
-        this.setPageNumber(1);
-        this.setPageSize(10);
-    }
 }

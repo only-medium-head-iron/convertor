@@ -4,3 +4,18 @@ spring:
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis-flex:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  datasource:
+    tms:
+      url: jdbc:mysql://rm-wz9osma53ib32tf1npo.mysql.rds.aliyuncs.com:6603/wt_otms?allowMultiQueries=true
+      username: omsroot
+      password: MysqlSAsls90
+      driver-class-name: com.mysql.cj.jdbc.Driver
+    vms:
+      url: jdbc:mysql://rm-wz9osma53ib32tf1npo.mysql.rds.aliyuncs.com:6603/wt_vms?allowMultiQueries=true
+      username: omsroot
+      password: MysqlSAsls90
+      driver-class-name: com.mysql.cj.jdbc.Driver
