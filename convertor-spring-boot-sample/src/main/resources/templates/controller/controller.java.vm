@@ -7,7 +7,7 @@ import ${requestPackage}.${entityName}PageQuery;
 import ${responsePackage}.${entityName}RespVO;
 import ${entityPackage}.${entityName}PO;
 import ${servicePackage}.${entityName}Service;
-import org.demacia.common.CommonResult;
+import ${commonPackage}.CommonResult;
 import com.mybatisflex.core.paginate.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
