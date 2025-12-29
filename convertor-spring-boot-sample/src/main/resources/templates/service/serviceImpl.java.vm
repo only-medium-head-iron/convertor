@@ -33,6 +33,48 @@ public class ${entityName}ServiceImpl implements ${entityName}Service {
     private ${entityName}Mapper ${entityVariable}Mapper;
 
     @Override
+    public Long create(${entityName}CreateReq req) {
+        // 1. 转换实体对象
+        ${entityName} ${entityVariable} = BeanUtil.toBean(req, ${entityName}.class);
+
+        // 2. 保存到数据库
+        ${entityVariable}Mapper.insert(entity, true);
+
+        // 3. 返回新增结果
+        return ${entityVariable}.getId();
+    }
+
+    @Override
+    public Boolean update(${entityName}UpdateReq req) {
+        // 1. 校验是否存在
+        ${entityName} ${entityVariable} = validateExists(req.getId());
+
+        // 2. 转换实体对象
+        ${entityName} ${entityVariable} = BeanUtil.toBean(req, ${entityName}.class);
+
+        // 3. 更新到数据库
+        int result = ${entityVariable}Mapper.update(existing);
+
+        return result > 0;
+    }
+
+    @Override
+    public Boolean delete(Long id) {
+        // 1. 校验是否存在
+        ${entityName} ${entityVariable} = validateExists(req.getId());
+
+        // 2. 根据主键删除
+        int result = ${entityVariable}Mapper.deleteById(id);
+
+        return result > 0;
+    }
+
+    @Override
+    public ${entityName} getById(Long id) {
+        return ${entityVariable}Mapper.selectOneById(id);
+    }
+
+    @Override
     public Page<${entityName}RespVO> pageQuery(${entityName}PageQuery query) {
         QueryWrapper queryWrapper = QueryWrapper.create()
                 .select()
@@ -98,5 +140,21 @@ public class ${entityName}ServiceImpl implements ${entityName}Service {
             ${entityName}RespVO vo = new ${entityName}RespVO();
         BeanUtils.copyProperties(entity, vo);
         return vo;
+    }
+
+    /**
+     * 校验数据是否存在
+     *
+     * @param id 主键
+     * @return ${entityName}
+     */
+    private ${entityName} validateExists(${entityName}UpdateReq req) {
+        Long id = req.getId();
+        ${entityName} ${entityVariable} = ${entityVariable}Mapper.selectOneById(id);
+        if (${entityVariable} == null) {
+            throw new RuntimeException("${comment}不存在");
+        }
+
+        return ${entityVariable};
     }
 }

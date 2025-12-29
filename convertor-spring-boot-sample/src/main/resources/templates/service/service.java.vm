@@ -31,14 +31,9 @@ public interface ${entityName}Service {
     Boolean delete(Long id);
 
     /**
-     * 批量删除${comment}
-     */
-    Boolean batchDelete(List<Long> ids);
-
-    /**
      * 根据ID获取${comment}详情
      */
-    ${entityName}RespVO getById(Long id);
+    ${entityName} getById(Long id);
 
     /**
      * 分页查询${comment}

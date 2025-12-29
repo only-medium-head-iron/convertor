@@ -17,16 +17,17 @@ public class FixedModuleGenerator {
 
     private static final VelocityEngine velocityEngine = initVelocity();
     private static final String BASE_PACKAGE = "org.demacia";
+    private static final String COMMON_PACKAGE = BASE_PACKAGE + ".common";
 
     public static void main(String[] args) throws Exception {
         System.out.println("开始生成动态字段代码...");
 
         HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl("jdbc:mysql://rm-wz9osma53ib32tf1npo.mysql.rds.aliyuncs.com:6603/wt_vms?allowMultiQueries=true");
+        dataSource.setJdbcUrl("jdbc:mysql://rm-wz9osma53ib32tf1npo.mysql.rds.aliyuncs.com:6603/wt_otms?allowMultiQueries=true");
         dataSource.setUsername("omsroot");
         dataSource.setPassword("MysqlSAsls90");
 
-        List<String> tables = Arrays.asList("mdm_car");
+        List<String> tables = Arrays.asList("app_config");
 
         for (String tableName : tables) {
             System.out.println("正在生成表: " + tableName);
@@ -38,10 +39,10 @@ public class FixedModuleGenerator {
             String entityVariable = toCamelCase(tableName, false);
 
             // 获取表注释
-            String tableComment = getTableComment(dataSource, "wt_vms", tableName);
+            String tableComment = getTableComment(dataSource, "wt_otms", tableName);
 
             // 获取表字段信息
-            List<Map<String, Object>> columns = fetchColumnDetails(dataSource, "wt_vms", tableName);
+            List<Map<String, Object>> columns = fetchColumnDetails(dataSource, "wt_otms", tableName);
 
             // 生成所有代码
             generateAllCode(module, tableName, entityName, entityVariable, tableComment, columns);
@@ -123,6 +124,9 @@ public class FixedModuleGenerator {
 
                     // 判断是否为时间戳字段
                     column.put("isTimestampField", isTimestampField(dataType));
+
+                    // 判断是否为时间戳字段
+                    column.put("isBaseEntityField", isBaseEntityField(columnName));
 
                     // 添加jdbcType映射
                     String jdbcType = getJdbcType(dataType);
@@ -218,6 +222,15 @@ public class FixedModuleGenerator {
                 "date".equals(dataType);
     }
 
+    private static boolean isBaseEntityField(String columnName) {
+        columnName = columnName.toLowerCase();
+        return "create_by".equals(columnName) ||
+                "create_time".equals(columnName) ||
+                "update_by".equals(columnName) ||
+                "update_time".equals(columnName) ||
+                "deleted".equals(columnName);
+    }
+
     private static String toCamelCase(String str, boolean firstUpper) {
         if (str == null || str.isEmpty()) {
             return str;
@@ -251,6 +264,7 @@ public class FixedModuleGenerator {
         context.put("comment", tableComment);
         context.put("columns", columns);
         context.put("basePackage", BASE_PACKAGE);
+        context.put("commonPackage", COMMON_PACKAGE);
 
         // 包路径
         String entityPackage = BASE_PACKAGE + ".entity." + module;
@@ -279,6 +293,9 @@ public class FixedModuleGenerator {
         boolean hasSize = false;
         boolean hasMinMax = false;
         boolean hasDateField = false;
+        boolean hasLocalDateTime = false;
+        boolean hasLocalDate = false;
+        boolean hasBigDecimal = false;
 
         for (Map<String, Object> column : columns) {
             if (!(Boolean) column.get("nullable") && "String".equals(column.get("javaTypeSimpleName"))) {
@@ -296,6 +313,15 @@ public class FixedModuleGenerator {
             if ("LocalDateTime".equals(column.get("javaTypeSimpleName")) || "LocalDate".equals(column.get("javaTypeSimpleName"))) {
                 hasDateField = true;
             }
+            if ("LocalDateTime".equals(column.get("javaTypeSimpleName"))) {
+                hasLocalDateTime = true;
+            }
+            if ("LocalDate".equals(column.get("javaTypeSimpleName"))) {
+                hasLocalDate = true;
+            }
+            if ("BigDecimal".equals(column.get("javaTypeSimpleName"))) {
+                hasBigDecimal = true;
+            }
         }
 
         context.put("hasNotBlank", hasNotBlank);
@@ -303,6 +329,9 @@ public class FixedModuleGenerator {
         context.put("hasSize", hasSize);
         context.put("hasMinMax", hasMinMax);
         context.put("hasDateField", hasDateField);
+        context.put("hasLocalDateTime", hasLocalDateTime);
+        context.put("hasLocalDate", hasLocalDate);
+        context.put("hasBigDecimal", hasBigDecimal);
 
         // 创建目录
         createDirectories(context);

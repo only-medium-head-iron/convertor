@@ -2,20 +2,16 @@ package ${entityPackage};
 
 import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.Table;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
-
+import ($commonPackage).BaseEntity;
 import java.time.LocalDateTime;
 ## 判断是否有日期字段
-#set($hasDateField = false)
-#foreach($column in $columns)
-    #if($column.javaTypeSimpleName == "LocalDateTime" || $column.javaTypeSimpleName == "LocalDate")
-        #set($hasDateField = true)
-    #end
-#end
-#if($hasDateField)
+#if($hasLocalDateTime)
 import java.time.LocalDateTime;
+#end
+#if($hasLocalDate)
+import java.time.LocalDate;
 #end
 
 /**
@@ -24,7 +20,7 @@ import java.time.LocalDateTime;
 @Data
 @Accessors(chain = true)
 @Table("${tableName}")
-public class ${entityName} {
+public class ${entityName} extends BaseEntity {
 #foreach($column in $columns)
     /**
      * ${column.comment}

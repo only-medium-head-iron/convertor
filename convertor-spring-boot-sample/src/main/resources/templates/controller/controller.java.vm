@@ -56,7 +56,8 @@ public class ${entityName}Controller {
     @GetMapping("/get/{id}")
     @Operation(summary = "获取${comment}详情")
     public CommonResult<${entityName}RespVO> getById(@PathVariable Long id) {
-        ${entityName}RespVO result = ${entityVariable}Service.getById(id);
-        return CommonResult.success(result);
+        ${entityName} ${entityVariable} = ${entityVariable}Service.getById(id);
+        ${entityName}RespVO ${entityVariable}RespVO = BeanUtil.toBean(req, ${entityName}RespVO.class);
+        return CommonResult.success(${entityVariable}RespVO);
     }
 }
