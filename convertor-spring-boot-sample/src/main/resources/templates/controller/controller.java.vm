@@ -59,7 +59,7 @@ public class ${entityName}Controller {
     @Operation(summary = "获取${comment}详情")
     public CommonResult<${entityName}RespVO> getById(@PathVariable Long id) {
         ${entityName}PO ${entityVariable}PO = ${entityVariable}Service.getById(id);
-        ${entityName}RespVO ${entityVariable}RespVO = BeanUtil.toBean(${entityVariable}, ${entityName}RespVO.class);
+        ${entityName}RespVO ${entityVariable}RespVO = BeanUtil.toBean(${entityVariable}PO, ${entityName}RespVO.class);
         return CommonResult.success(${entityVariable}RespVO);
     }
 }

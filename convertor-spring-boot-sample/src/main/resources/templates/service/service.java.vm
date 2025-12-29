@@ -4,7 +4,7 @@ import ${requestPackage}.${entityName}CreateReq;
 import ${requestPackage}.${entityName}UpdateReq;
 import ${requestPackage}.${entityName}PageQuery;
 import ${responsePackage}.${entityName}RespVO;
-import ${entityPackage}.${entityName};
+import ${entityPackage}.${entityName}PO;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.service.IService;
 

@@ -23,6 +23,8 @@ import java.time.LocalDate;
 @Table("${tableName}")
 public class ${entityName}PO extends BaseEntity {
 #foreach($column in $columns)
+#if(!$column.isLogicDelete && !$column.isBaseEntityField)
+
     /**
      * ${column.comment}
      */
@@ -30,6 +32,6 @@ public class ${entityName}PO extends BaseEntity {
     @Id#if($column.autoIncrement)(keyType = com.mybatisflex.annotation.KeyType.Auto)#end
     #end
     private ${column.javaTypeSimpleName} ${column.propertyName};
-
+#end
 #end
 }

@@ -18,6 +18,10 @@ public class FixedModuleGenerator {
     private static final VelocityEngine velocityEngine = initVelocity();
     private static final String BASE_PACKAGE = "org.demacia";
     private static final String COMMON_PACKAGE = BASE_PACKAGE + ".common";
+    private static final String DATABASE = "wt_otms";
+
+    // 配置表前缀，以逗号分隔
+    private static final String TABLE_PREFIXES = "sys_,t_,wt_";
 
     public static void main(String[] args) throws Exception {
         System.out.println("开始生成动态字段代码...");
@@ -32,23 +36,57 @@ public class FixedModuleGenerator {
         for (String tableName : tables) {
             System.out.println("正在生成表: " + tableName);
 
-            // 解析表名
-            String[] parts = tableName.split("_");
-            String module = parts[0];
-            String entityName = toCamelCase(tableName, true);
-            String entityVariable = toCamelCase(tableName, false);
+            // 解析表名（去除前缀）
+            String tableNameWithoutPrefix = removeTablePrefix(tableName);
+
+            System.out.println("原始表名: " + tableName);
+            System.out.println("去除前缀后表名: " + tableNameWithoutPrefix);
+
+            // 获取模块名（使用去除前缀后的表名）
+            String module = getModuleName(tableNameWithoutPrefix);
+            String entityName = toCamelCase(tableNameWithoutPrefix, true);
+            String entityVariable = toCamelCase(tableNameWithoutPrefix, false);
 
             // 获取表注释
-            String tableComment = getTableComment(dataSource, "wt_otms", tableName);
+            String tableComment = getTableComment(dataSource, DATABASE, tableName);
 
             // 获取表字段信息
-            List<Map<String, Object>> columns = fetchColumnDetails(dataSource, "wt_otms", tableName);
+            List<Map<String, Object>> columns = fetchColumnDetails(dataSource, DATABASE, tableName);
 
             // 生成所有代码
-            generateAllCode(module, tableName, entityName, entityVariable, tableComment, columns);
+            generateAllCode(module, tableName, tableNameWithoutPrefix, entityName, entityVariable, tableComment, columns);
         }
 
         System.out.println("所有代码生成完成！");
+    }
+
+    /**
+     * 移除表前缀
+     */
+    private static String removeTablePrefix(String tableName) {
+        String[] prefixes = TABLE_PREFIXES.split(",");
+        for (String prefix : prefixes) {
+            if (tableName.startsWith(prefix)) {
+                return tableName.substring(prefix.length());
+            }
+        }
+        return tableName;
+    }
+
+    /**
+     * 获取模块名（以去除前缀后的第一个下划线分隔作为模块名）
+     */
+    private static String getModuleName(String tableNameWithoutPrefix) {
+        if (tableNameWithoutPrefix == null || tableNameWithoutPrefix.isEmpty()) {
+            return "common";
+        }
+
+        int underscoreIndex = tableNameWithoutPrefix.indexOf('_');
+        if (underscoreIndex > 0) {
+            return tableNameWithoutPrefix.substring(0, underscoreIndex);
+        }
+
+        return "common";
     }
 
     /**
@@ -77,7 +115,7 @@ public class FixedModuleGenerator {
         } catch (Exception e) {
             System.err.println("获取表注释失败: " + e.getMessage());
         }
-        
+
         // 去掉最后一个"表"字
         if (tableComment.endsWith("表")) {
             tableComment = tableComment.substring(0, tableComment.length() - 1);
@@ -252,13 +290,14 @@ public class FixedModuleGenerator {
         return result.toString();
     }
 
-    private static void generateAllCode(String module, String tableName, String entityName,
-                                        String entityVariable, String tableComment,
+    private static void generateAllCode(String module, String originalTableName, String tableNameWithoutPrefix,
+                                        String entityName, String entityVariable, String tableComment,
                                         List<Map<String, Object>> columns) throws Exception {
         // 准备上下文数据
         Map<String, Object> context = new HashMap<>();
         context.put("module", module);
-        context.put("tableName", tableName);
+        context.put("originalTableName", originalTableName);  // 原始表名
+        context.put("tableName", tableNameWithoutPrefix);     // 去除前缀后的表名
         context.put("entityName", entityName);
         context.put("entityVariable", entityVariable);
         context.put("comment", tableComment);
@@ -283,8 +322,8 @@ public class FixedModuleGenerator {
         context.put("servicePackage", servicePackage);
         context.put("serviceImplPackage", serviceImplPackage);
 
-        // 设置TableDef常量名
-        String tableConstantName = tableName.toUpperCase();
+        // 设置TableDef常量名（使用原始表名，因为数据库查询需要）
+        String tableConstantName = originalTableName.toUpperCase();
         context.put("tableConstantName", tableConstantName);
 
         // 计算需要导入的注解
@@ -338,7 +377,7 @@ public class FixedModuleGenerator {
 
         // 生成所有文件
         String[][] files = {
-                {"entity/entity.java.vm", entityPackage, entityName},
+                {"entity/entity.java.vm", entityPackage, entityName + "PO"},
                 {"mapper/mapper.java.vm", mapperPackage, entityName + "Mapper"},
                 {"mapper/mapper.xml.vm", "src/main/resources/mapper/" + module, entityName + "Mapper"},
                 {"controller/controller.java.vm", controllerPackage, entityName + "Controller"},
@@ -384,7 +423,7 @@ public class FixedModuleGenerator {
         }
     }
 
-    private static void generateFile(String templateName, String packageOrPath, String fileName, 
+    private static void generateFile(String templateName, String packageOrPath, String fileName,
                                      Map<String, Object> data) throws Exception {
         VelocityContext context = new VelocityContext(data);
 
@@ -396,7 +435,7 @@ public class FixedModuleGenerator {
         // 确定文件路径和扩展名
         String filePath;
         String extension = ".java";
-        
+
         if (templateName.endsWith(".xml.vm")) {
             filePath = packageOrPath;  // 已经是完整路径
             extension = ".xml";

@@ -5,7 +5,7 @@ import ${requestPackage}.${entityName}CreateReq;
 import ${requestPackage}.${entityName}UpdateReq;
 import ${requestPackage}.${entityName}PageQuery;
 import ${responsePackage}.${entityName}RespVO;
-import ${entityPackage}.${entityName};
+import ${entityPackage}.${entityName}PO;
 import ${mapperPackage}.${entityName}Mapper;
 import ${servicePackage}.${entityName}Service;
 import com.mybatisflex.core.paginate.Page;
@@ -14,14 +14,11 @@ import com.mybatisflex.core.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static ${entityPackage}.table.AppConfigTableDef.APP_CONFIG;
+import static ${entityPackage}.table.${entityName}POTableDef.${tableConstantName}PO;
 
 /**
  * ${comment}服务实现
@@ -36,13 +33,13 @@ public class ${entityName}ServiceImpl implements ${entityName}Service {
     @Override
     public Long create(${entityName}CreateReq req) {
         // 1. 转换实体对象
-        ${entityName}PO ${entityVariable}PO = BeanUtil.toBean(req, ${entityName}.class);
+        ${entityName}PO ${entityVariable}PO = BeanUtil.toBean(req, ${entityName}PO.class);
 
         // 2. 保存到数据库
-        ${entityVariable}Mapper.insert(${entityVariable}, true);
+        ${entityVariable}Mapper.insert(${entityVariable}PO, true);
 
         // 3. 返回新增结果
-        return ${entityVariable}.getId();
+        return ${entityVariable}PO.getId();
     }
 
     @Override
@@ -51,7 +48,7 @@ public class ${entityName}ServiceImpl implements ${entityName}Service {
         ${entityName}PO existing = validateExists(req.getId());
 
         // 2. 转换实体对象
-        ${entityName}PO ${entityVariable}PO = BeanUtil.toBean(req, ${entityName}.class);
+        ${entityName}PO ${entityVariable}PO = BeanUtil.toBean(req, ${entityName}PO.class);
 
         // 3. 更新到数据库
         int result = ${entityVariable}Mapper.update(existing);
@@ -79,8 +76,8 @@ public class ${entityName}ServiceImpl implements ${entityName}Service {
     public Page<${entityName}RespVO> pageQuery(${entityName}PageQuery query) {
         QueryWrapper queryWrapper = QueryWrapper.create()
                 .select()
-                .from(${tableConstantName})
-                .where(${tableConstantName}.DELETED.eq(0))
+                .from(${tableConstantName}PO)
+                .where(${tableConstantName}PO.DELETED.eq(0))
         #foreach($column in $columns)
             #if(!$column.isPrimary && !$column.isLogicDelete && !$column.isTimestampField &&
                 $column.name != "create_by" && $column.name != "update_by" &&
@@ -89,19 +86,19 @@ public class ${entityName}ServiceImpl implements ${entityName}Service {
                     $column.name.endsWith("_remark") || $column.name.endsWith("_desc") ||
                     $column.name.endsWith("_description") || $column.name.endsWith("_key") ||
                     $column.name.endsWith("_value"))
-                    .and(${tableConstantName}.${column.name.toUpperCase()}.like(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::hasText))
+                    .and(${tableConstantName}PO.${column.name.toUpperCase()}.like(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::hasText))
                 #elseif($column.dataType == "int" || $column.dataType == "tinyint" || $column.dataType == "smallint" || $column.dataType == "bigint" || $column.dataType == "integer")
-                    .and(${tableConstantName}.${column.name.toUpperCase()}.eq(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::notNull))
+                    .and(${tableConstantName}PO.${column.name.toUpperCase()}.eq(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::notNull))
                 #elseif($column.dataType == "varchar" || $column.dataType == "char" || $column.dataType == "text" || $column.dataType == "longtext" || $column.dataType == "mediumtext")
-                    .and(${tableConstantName}.${column.name.toUpperCase()}.eq(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::hasText))
+                    .and(${tableConstantName}PO.${column.name.toUpperCase()}.eq(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::hasText))
                 #elseif($column.dataType == "decimal" || $column.dataType == "numeric" || $column.dataType == "float" || $column.dataType == "double")
-                    .and(${tableConstantName}.${column.name.toUpperCase()}.eq(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::notNull))
+                    .and(${tableConstantName}PO.${column.name.toUpperCase()}.eq(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::notNull))
                 #elseif($column.dataType == "datetime" || $column.dataType == "timestamp" || $column.dataType == "date")
-                    .and(${tableConstantName}.${column.name.toUpperCase()}.between(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}()))
+                    .and(${tableConstantName}PO.${column.name.toUpperCase()}.between(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}()))
                 #elseif($column.dataType == "bit" || ($column.dataType == "tinyint" && $column.columnType.toLowerCase().contains("tinyint(1)")))
-                    .and(${tableConstantName}.${column.name.toUpperCase()}.eq(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::notNull))
+                    .and(${tableConstantName}PO.${column.name.toUpperCase()}.eq(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::notNull))
                 #else
-                    .and(${tableConstantName}.${column.name.toUpperCase()}.eq(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::notNull))
+                    .and(${tableConstantName}PO.${column.name.toUpperCase()}.eq(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::notNull))
                 #end
             #end
         #end;
