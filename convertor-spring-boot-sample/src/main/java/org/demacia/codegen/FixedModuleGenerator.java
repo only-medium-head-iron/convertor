@@ -179,8 +179,7 @@ public class FixedModuleGenerator {
                 }
             }
         } catch (Exception e) {
-            System.err.println("获取字段信息失败: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("获取字段信息失败: " + e);
         }
 
         return columns;
@@ -284,7 +283,7 @@ public class FixedModuleGenerator {
             if (i == 0 && !firstUpper) {
                 result.append(parts[i]);
             } else {
-                if (parts[i].length() > 0) {
+                if (!parts[i].isEmpty()) {
                     result.append(Character.toUpperCase(parts[i].charAt(0)));
                     if (parts[i].length() > 1) {
                         result.append(parts[i].substring(1).toLowerCase());
@@ -415,7 +414,10 @@ public class FixedModuleGenerator {
             String dirPath = "src/main/java/" + pkg.replace('.', '/');
             File dir = new File(dirPath);
             if (!dir.exists()) {
-                dir.mkdirs();
+                boolean flag = dir.mkdirs();
+                if (!flag) {
+                    throw new RuntimeException("创建目录失败：" + dirPath);
+                }
             }
         }
 
@@ -424,7 +426,10 @@ public class FixedModuleGenerator {
         String xmlDir = "src/main/resources/mapper/" + module;
         File xmlDirFile = new File(xmlDir);
         if (!xmlDirFile.exists()) {
-            xmlDirFile.mkdirs();
+            boolean flag = xmlDirFile.mkdirs();
+            if (!flag) {
+                throw new RuntimeException("创建目录失败：" + xmlDir);
+            }
         }
     }
 
@@ -438,6 +443,14 @@ public class FixedModuleGenerator {
         String content = writer.toString();
 
         // 确定文件路径和扩展名
+        File file = createFile(templateName, packageOrPath, fileName);
+        try (FileWriter fileWriter = new FileWriter(file)) {
+            fileWriter.write(content);
+            System.out.println("  ✓ 生成: " + file.getAbsolutePath());
+        }
+    }
+
+    private static File createFile(String templateName, String packageOrPath, String fileName) {
         String filePath;
         String extension = ".java";
 
@@ -450,14 +463,13 @@ public class FixedModuleGenerator {
 
         File dir = new File(filePath);
         if (!dir.exists()) {
-            dir.mkdirs();
+            boolean flag = dir.mkdirs();
+            if (!flag) {
+                throw new RuntimeException("创建目录失败：" + filePath);
+            }
         }
 
-        File file = new File(dir, fileName + extension);
-        try (FileWriter fileWriter = new FileWriter(file)) {
-            fileWriter.write(content);
-            System.out.println("  ✓ 生成: " + file.getAbsolutePath());
-        }
+        return new File(dir, fileName + extension);
     }
 
     private static VelocityEngine initVelocity() {
