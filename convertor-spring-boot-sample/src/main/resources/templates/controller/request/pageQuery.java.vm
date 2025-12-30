@@ -5,7 +5,15 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import ${commonPackage}.PageParams;
 
+#if($hasLocalDateTime)
 import java.time.LocalDateTime;
+#end
+#if($hasLocalDate)
+import java.time.LocalDate;
+#end
+#if($hasBigDecimal)
+import java.math.BigDecimal;
+#end
 
 /**
  * ${comment}分页查询请求

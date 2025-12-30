@@ -8,6 +8,9 @@ import java.time.LocalDateTime;
 #if($hasLocalDate)
 import java.time.LocalDate;
 #end
+#if($hasBigDecimal)
+import java.math.BigDecimal;
+#end
 
 /**
  * ${comment}响应对象

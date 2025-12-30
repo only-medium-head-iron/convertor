@@ -21,7 +21,7 @@ public class FixedModuleGenerator {
     private static final String DATABASE = "wt_otms";
 
     // 配置表前缀，以逗号分隔
-    private static final String TABLE_PREFIXES = "sys_,t_,wt_";
+    private static final String TABLE_PREFIXES = "tms_";
 
     public static void main(String[] args) throws Exception {
         System.out.println("开始生成动态字段代码...");
@@ -31,7 +31,7 @@ public class FixedModuleGenerator {
         dataSource.setUsername("omsroot");
         dataSource.setPassword("MysqlSAsls90");
 
-        List<String> tables = Arrays.asList("app_config");
+        List<String> tables = Arrays.asList("tms_scheduling_main");
 
         for (String tableName : tables) {
             System.out.println("正在生成表: " + tableName);
@@ -114,6 +114,11 @@ public class FixedModuleGenerator {
             }
         } catch (Exception e) {
             System.err.println("获取表注释失败: " + e.getMessage());
+        }
+
+        // 去掉最后一个"主表"字
+        if (tableComment.endsWith("主表")) {
+            tableComment = tableComment.substring(0, tableComment.length() - 2);
         }
 
         // 去掉最后一个"表"字
@@ -297,7 +302,7 @@ public class FixedModuleGenerator {
         Map<String, Object> context = new HashMap<>();
         context.put("module", module);
         context.put("originalTableName", originalTableName);  // 原始表名
-        context.put("tableName", tableNameWithoutPrefix);     // 去除前缀后的表名
+        context.put("tableNameWithoutPrefix", tableNameWithoutPrefix);     // 去除前缀后的表名
         context.put("entityName", entityName);
         context.put("entityVariable", entityVariable);
         context.put("comment", tableComment);
@@ -323,7 +328,7 @@ public class FixedModuleGenerator {
         context.put("serviceImplPackage", serviceImplPackage);
 
         // 设置TableDef常量名（使用原始表名，因为数据库查询需要）
-        String tableConstantName = originalTableName.toUpperCase();
+        String tableConstantName = tableNameWithoutPrefix.toUpperCase();
         context.put("tableConstantName", tableConstantName);
 
         // 计算需要导入的注解
@@ -381,10 +386,10 @@ public class FixedModuleGenerator {
                 {"mapper/mapper.java.vm", mapperPackage, entityName + "Mapper"},
                 {"mapper/mapper.xml.vm", "src/main/resources/mapper/" + module, entityName + "Mapper"},
                 {"controller/controller.java.vm", controllerPackage, entityName + "Controller"},
-                {"request/createReq.java.vm", requestPackage, entityName + "CreateReq"},
-                {"request/updateReq.java.vm", requestPackage, entityName + "UpdateReq"},
-                {"request/pageQuery.java.vm", requestPackage, entityName + "PageQuery"},
-                {"response/respVo.java.vm", responsePackage, entityName + "RespVO"},
+                {"controller/request/createReq.java.vm", requestPackage, entityName + "CreateReq"},
+                {"controller/request/updateReq.java.vm", requestPackage, entityName + "UpdateReq"},
+                {"controller/request/pageQuery.java.vm", requestPackage, entityName + "PageQuery"},
+                {"controller/response/respVo.java.vm", responsePackage, entityName + "RespVO"},
                 {"service/service.java.vm", servicePackage, entityName + "Service"},
                 {"service/serviceImpl.java.vm", serviceImplPackage, entityName + "ServiceImpl"}
         };
