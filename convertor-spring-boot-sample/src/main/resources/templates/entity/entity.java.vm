@@ -6,12 +6,14 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import ${commonPackage}.BaseEntity;
-## 判断是否有日期字段
 #if($hasLocalDateTime)
 import java.time.LocalDateTime;
 #end
 #if($hasLocalDate)
 import java.time.LocalDate;
+#end
+#if($hasBigDecimal)
+import java.math.BigDecimal;
 #end
 
 /**
@@ -20,7 +22,7 @@ import java.time.LocalDate;
 @Data
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = true)
-@Table("${tableName}")
+@Table("${originalTableName}")
 public class ${entityName}PO extends BaseEntity {
 #foreach($column in $columns)
 #if(!$column.isLogicDelete && !$column.isBaseEntityField)

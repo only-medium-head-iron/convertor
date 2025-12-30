@@ -384,7 +384,7 @@ public class FixedModuleGenerator {
                 {"request/createReq.java.vm", requestPackage, entityName + "CreateReq"},
                 {"request/updateReq.java.vm", requestPackage, entityName + "UpdateReq"},
                 {"request/pageQuery.java.vm", requestPackage, entityName + "PageQuery"},
-                {"response/vo.java.vm", responsePackage, entityName + "RespVO"},
+                {"response/respVo.java.vm", responsePackage, entityName + "RespVO"},
                 {"service/service.java.vm", servicePackage, entityName + "Service"},
                 {"service/serviceImpl.java.vm", serviceImplPackage, entityName + "ServiceImpl"}
         };

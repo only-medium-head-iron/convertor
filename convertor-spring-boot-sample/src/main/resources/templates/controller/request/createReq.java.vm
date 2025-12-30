@@ -12,7 +12,15 @@ import javax.validation.constraints.Size;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.Max;
 #end
-
+#if($hasLocalDateTime)
+import java.time.LocalDateTime;
+#end
+#if($hasLocalDate)
+import java.time.LocalDate;
+#end
+#if($hasBigDecimal)
+import java.math.BigDecimal;
+#end
 /**
  * 创建${comment}请求
  */
