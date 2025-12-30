@@ -31,7 +31,7 @@ public class FixedModuleGenerator {
         dataSource.setUsername("omsroot");
         dataSource.setPassword("MysqlSAsls90");
 
-        List<String> tables = Arrays.asList("tms_scheduling_main");
+        List<String> tables = Arrays.asList("tms_scheduling_main", "app_config");
 
         for (String tableName : tables) {
             System.out.println("正在生成表: " + tableName);
