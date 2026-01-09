@@ -13,7 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.*;
 
-public class FixedModuleGenerator {
+public class CodeGenerator {
 
     private static final VelocityEngine velocityEngine = initVelocity();
     private static final String BASE_PACKAGE = "org.demacia";
