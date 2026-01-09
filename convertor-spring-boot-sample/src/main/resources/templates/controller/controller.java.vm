@@ -20,7 +20,7 @@ import javax.annotation.Resource;
  * ${comment} 控制器
  */
 @RestController
-@RequestMapping("/${module}/${entityVariable}")
+@RequestMapping("${requestMappingURL}")
 @Tag(name = "${comment}管理")
 public class ${entityName}Controller {
 

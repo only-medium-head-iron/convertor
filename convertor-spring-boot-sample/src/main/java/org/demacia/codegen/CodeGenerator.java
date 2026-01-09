@@ -47,6 +47,9 @@ public class CodeGenerator {
             String entityName = toCamelCase(tableNameWithoutPrefix, true);
             String entityVariable = toCamelCase(tableNameWithoutPrefix, false);
 
+            // 获取请求映射URL
+            String requestMappingURL = "/" + module + "/" + getUrlPath(tableNameWithoutPrefix);
+
             // 获取表注释
             String tableComment = getTableComment(dataSource, DATABASE, tableName);
 
@@ -54,10 +57,51 @@ public class CodeGenerator {
             List<Map<String, Object>> columns = fetchColumnDetails(dataSource, DATABASE, tableName);
 
             // 生成所有代码
-            generateAllCode(module, tableName, tableNameWithoutPrefix, entityName, entityVariable, tableComment, columns);
+            generateAllCode(module, requestMappingURL, tableName, tableNameWithoutPrefix, entityName, entityVariable, tableComment, columns);
         }
 
         System.out.println("所有代码生成完成！");
+    }
+
+    /**
+     * 获取URL路径（取去除前缀后第一个下划线后的部分，并转换为kebab-case格式）
+     */
+    private static String getUrlPath(String tableNameWithoutPrefix) {
+        if (tableNameWithoutPrefix == null || tableNameWithoutPrefix.isEmpty()) {
+            return "";
+        }
+
+        int firstUnderscoreIndex = tableNameWithoutPrefix.indexOf('_');
+        if (firstUnderscoreIndex > 0) {
+            // 获取第一个下划线后的部分
+            String urlPart = tableNameWithoutPrefix.substring(firstUnderscoreIndex + 1);
+            // 转换为kebab-case格式（处理多个下划线的情况）
+            return convertToKebabCase(urlPart);
+        }
+
+        // 如果没有下划线，使用整个表名（转换为kebab-case）
+        return convertToKebabCase(tableNameWithoutPrefix);
+    }
+
+    /**
+     * 将下划线命名转换为kebab-case（短横线）格式
+     */
+    private static String convertToKebabCase(String str) {
+        if (str == null || str.isEmpty()) {
+            return str;
+        }
+
+        StringBuilder result = new StringBuilder();
+        String[] parts = str.split("_");
+
+        for (int i = 0; i < parts.length; i++) {
+            if (i > 0) {
+                result.append("-");
+            }
+            result.append(parts[i]);
+        }
+
+        return result.toString();
     }
 
     /**
@@ -294,12 +338,13 @@ public class CodeGenerator {
         return result.toString();
     }
 
-    private static void generateAllCode(String module, String originalTableName, String tableNameWithoutPrefix,
+    private static void generateAllCode(String module, String requestMappingURL, String originalTableName, String tableNameWithoutPrefix,
                                         String entityName, String entityVariable, String tableComment,
                                         List<Map<String, Object>> columns) throws Exception {
         // 准备上下文数据
         Map<String, Object> context = new HashMap<>();
         context.put("module", module);
+        context.put("requestMappingURL", requestMappingURL);
         context.put("originalTableName", originalTableName);  // 原始表名
         context.put("tableNameWithoutPrefix", tableNameWithoutPrefix);     // 去除前缀后的表名
         context.put("entityName", entityName);
