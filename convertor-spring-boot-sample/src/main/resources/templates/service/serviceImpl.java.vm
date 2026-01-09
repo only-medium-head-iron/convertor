@@ -23,7 +23,7 @@ import static ${entityPackage}.table.${entityName}POTableDef.${tableConstantName
  */
 @Slf4j
 @Service
-public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, ${entityName}> ${entityName}Service {
+public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, ${entityName}PO> implements ${entityName}Service {
 
     @Resource
     private ${entityName}Mapper ${entityVariable}Mapper;

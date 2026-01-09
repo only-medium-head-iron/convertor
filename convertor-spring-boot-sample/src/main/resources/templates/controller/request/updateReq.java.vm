@@ -58,17 +58,13 @@ public class ${entityName}UpdateReq {
     #if($column.javaTypeSimpleName == "Integer" && $column.dataType == "tinyint" && $column.columnType && $column.columnType.contains("(1)"))
     // 布尔类型字段
     #elseif($column.javaTypeSimpleName == "Integer" && $column.dataType == "tinyint")
-    @Min(value = -128, message = "${column.comment}值不能小于-128")
-    @Max(value = 127, message = "${column.comment}值不能大于127")
+    @Max(value = Byte.MAX_VALUE, message = "${column.comment}值不能大于127")
     #elseif($column.javaTypeSimpleName == "Integer" && $column.dataType == "smallint")
-    @Min(value = -32768, message = "${column.comment}值不能小于-32768")
-    @Max(value = 32767, message = "${column.comment}值不能大于32767")
+    @Max(value = Short.MAX_VALUE, message = "${column.comment}值不能大于32767")
     #elseif($column.javaTypeSimpleName == "Integer")
-    @Min(value = -2147483648, message = "${column.comment}值不能小于-2147483648")
-    @Max(value = 2147483647, message = "${column.comment}值不能大于2147483647")
+    @Max(value = Integer.MAX_VALUE, message = "${column.comment}值不能大于2147483647")
     #elseif($column.javaTypeSimpleName == "Long")
-    @Min(value = -9223372036854775808, message = "${column.comment}值不能小于-9223372036854775808")
-    @Max(value = 9223372036854775807, message = "${column.comment}值不能大于9223372036854775807")
+    @Max(value = Long.MAX_VALUE, message = "${column.comment}值不能大于9223372036854775807")
     #end
     private ${column.javaTypeSimpleName} ${column.propertyName};
 
