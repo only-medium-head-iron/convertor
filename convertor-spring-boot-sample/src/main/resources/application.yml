@@ -1,3 +1,5 @@
+server:
+  port: 9191
 spring:
   datasource:
     url: localhost:3306/test
