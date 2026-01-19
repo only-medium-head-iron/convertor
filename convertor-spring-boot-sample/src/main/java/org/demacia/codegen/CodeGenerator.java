@@ -522,7 +522,7 @@ public class CodeGenerator {
                 new Object[]{"controller/request/createReq.java.vm", context.get("requestPackage"), context.get("entityName") + "CreateReq"},
                 new Object[]{"controller/request/updateReq.java.vm", context.get("requestPackage"), context.get("entityName") + "UpdateReq"},
                 new Object[]{"controller/request/pageQuery.java.vm", context.get("requestPackage"), context.get("entityName") + "PageQuery"},
-                new Object[]{"controller/response/respVo.java.vm", context.get("responsePackage"), context.get("entityName") + "RespVO"},
+                new Object[]{"controller/response/respVO.java.vm", context.get("responsePackage"), context.get("entityName") + "RespVO"},
                 new Object[]{"service/service.java.vm", context.get("servicePackage"), context.get("entityName") + "Service"},
                 new Object[]{"service/serviceImpl.java.vm", context.get("serviceImplPackage"), context.get("entityName") + "ServiceImpl"}
         );

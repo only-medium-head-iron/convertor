@@ -1,5 +1,6 @@
 package ${requestPackage};
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -33,14 +34,15 @@ public class ${entityName}PageQuery extends PageParams {
 
         #end
         #if($column.isTimestampField)
-    @Schema(description = "${column.comment}, example = [2026-01-01 00:00:00, 2026-01-31 23:59:59]")
+    @Schema(description = "${column.comment}", example = "[\"2026-01-01 00:00:00\", \"2026-01-31 23:59:59\"]")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime[] ${column.propertyName};
 
         #end
     #end
-    @Schema(description = "排序字段")
-    private String sortField = "create_time";
-
-    @Schema(description = "排序方式：asc/desc", allowableValues = {"asc", "desc"})
-    private String sortOrder = "desc";
+##    @Schema(description = "排序字段")
+##    private String orderBy = "createTime";
+##
+##    @Schema(description = "排序方式", allowableValues = {"asc", "desc"})
+##    private Boolean orderType = "desc";
 }

@@ -94,9 +94,9 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
         return QueryWrapper.create()
                 .select()
                 .from(${tableConstantName}_PO)
-                .where(${tableConstantName}_PO.DELETED.eq(0))
+##                .where(${tableConstantName}_PO.DELETED.eq(0))
     #foreach($column in $columns)
-        #if(!$column.isPrimary && !$column.isLogicDelete && !$column.isTimestampField && !$column.isBaseEntityField)
+        #if(!$column.isPrimary && !$column.isLogicDelete)
             #if($column.name.endsWith("_name") || $column.name.endsWith("_title") ||
                 $column.name.endsWith("_remark") || $column.name.endsWith("_desc") ||
                 $column.name.endsWith("_description") || $column.name.endsWith("_key") ||
@@ -116,7 +116,7 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
                 .and(${tableConstantName}_PO.${column.name.toUpperCase()}.eq(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::notNull))
             #end
         #end
-    #end;
+    #end        .orderBy(${tableConstantName}_PO.CREATE_TIME, false);
     }
 
     /**
