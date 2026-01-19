@@ -30,11 +30,12 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
 
     @Override
     public Long create(${entityName}CreateReq req) {
+
         // 1. 转换实体对象
         ${entityName}PO ${entityVariable}PO = BeanUtil.toBean(req, ${entityName}PO.class);
 
         // 2. 保存到数据库
-        ${entityVariable}Mapper.insert(${entityVariable}PO, true);
+        ${entityVariable}Mapper.insertSelective(${entityVariable}PO, true);
 
         // 3. 返回新增结果
         return ${entityVariable}PO.getId();
@@ -42,6 +43,7 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
 
     @Override
     public Boolean update(${entityName}UpdateReq req) {
+
         // 1. 校验是否存在
         validateExists(req.getId());
 
@@ -56,6 +58,7 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
 
     @Override
     public Boolean delete(Long id) {
+
         // 1. 校验是否存在
         validateExists(id);
 
@@ -116,7 +119,7 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
                 .and(${tableConstantName}_PO.${column.name.toUpperCase()}.eq(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::notNull))
             #end
         #end
-    #end        .orderBy(${tableConstantName}_PO.CREATE_TIME, false);
+    #end                .orderBy(${tableConstantName}_PO.CREATE_TIME, false);
     }
 
     /**
