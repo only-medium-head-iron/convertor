@@ -14,10 +14,10 @@ public class MybatisFlexConfiguration {
             .getLogger("mybatis-flex-sql");
 
     public MybatisFlexConfiguration() {
-        //开启审计功能
+        // 开启审计功能
         AuditManager.setAuditEnable(true);
 
-        //设置 SQL 审计收集器
+        // 设置 SQL 审计收集器
         AuditManager.setMessageCollector(auditMessage ->
                 logger.info("{}; 耗时{}ms", auditMessage.getFullSql()
                         , auditMessage.getElapsedTime())
@@ -28,7 +28,7 @@ public class MybatisFlexConfiguration {
         MybatisUpdateListener mybatisUpdateListener = new MybatisUpdateListener();
         FlexGlobalConfig config = FlexGlobalConfig.getDefaultConfig();
 
-        //设置BaseEntity类启用
+        // 设置BaseEntity类启用
         config.registerInsertListener(mybatisInsertListener, BaseEntity.class);
         config.registerUpdateListener(mybatisUpdateListener, BaseEntity.class);
     }

@@ -11,10 +11,10 @@ import ${commonPackage}.CommonResult;
 import com.mybatisflex.core.paginate.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.validation.Valid;
 
 /**
  * ${comment} 控制器
@@ -29,14 +29,14 @@ public class ${entityName}Controller {
 
     @PostMapping("/create")
     @Operation(summary = "创建${comment}")
-    public CommonResult<Long> create(@Validated @RequestBody ${entityName}CreateReq req) {
+    public CommonResult<Long> create(@Valid @RequestBody ${entityName}CreateReq req) {
         Long id = ${entityVariable}Service.create(req);
         return CommonResult.success(id);
     }
 
     @PutMapping("/update")
     @Operation(summary = "更新${comment}")
-    public CommonResult<Boolean> update(@Validated @RequestBody ${entityName}UpdateReq req) {
+    public CommonResult<Boolean> update(@Valid @RequestBody ${entityName}UpdateReq req) {
         Boolean result = ${entityVariable}Service.update(req);
         return CommonResult.result(result);
     }
@@ -50,7 +50,7 @@ public class ${entityName}Controller {
 
     @PostMapping("/page-query")
     @Operation(summary = "分页查询${comment}")
-    public CommonResult<Page<${entityName}RespVO>> pageQuery(@Validated @RequestBody ${entityName}PageQuery query) {
+    public CommonResult<Page<${entityName}RespVO>> pageQuery(@Valid @RequestBody ${entityName}PageQuery query) {
         Page<${entityName}RespVO> result = ${entityVariable}Service.pageQuery(query);
         return CommonResult.success(result);
     }
