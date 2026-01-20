@@ -119,7 +119,7 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
                 .and(${tableConstantName}_PO.${column.name.toUpperCase()}.eq(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::notNull))
             #end
         #end
-    #end                .orderBy(${tableConstantName}_PO.CREATE_TIME, false);
+    #end                .orderBy(${tableConstantName}_PO.ID, false);
     }
 
     /**
