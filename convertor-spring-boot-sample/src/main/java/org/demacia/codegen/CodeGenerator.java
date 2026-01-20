@@ -24,17 +24,17 @@ public class CodeGenerator {
     // 配置常量
     private static final String BASE_PACKAGE = "org.demacia";
     private static final String COMMON_PACKAGE = BASE_PACKAGE + ".common";
-    private static final String DATABASE = "wt_otms";
-    private static final String TABLE_PREFIXES = "tms,oms";
+    private static final String DATABASE = "wt_vms";
+    private static final String TABLE_PREFIXES = "tms,oms,mdm";
 
     // 数据库配置
-    private static final String JDBC_URL = "jdbc:mysql://rm-wz9osma53ib32tf1npo.mysql.rds.aliyuncs.com:6603/wt_otms?allowMultiQueries=true";
+    private static final String JDBC_URL = "jdbc:mysql://rm-wz9osma53ib32tf1npo.mysql.rds.aliyuncs.com:6603/" + DATABASE + "?allowMultiQueries=true";
     private static final String USERNAME = "omsroot";
     private static final String PASSWORD = "MysqlSAsls90";
 
     // 需要生成的表列表
     private static final List<String> TABLES = Arrays.asList(
-            "oms_shop", "message_task_log", "app_config", "tms_work_order_goods"
+            "mdm_car"
     );
 
     public static void main(String[] args) {
