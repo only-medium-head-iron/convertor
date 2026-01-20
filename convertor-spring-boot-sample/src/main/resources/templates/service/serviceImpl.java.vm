@@ -35,7 +35,7 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
         ${entityName}PO ${entityVariable}PO = BeanUtil.toBean(req, ${entityName}PO.class);
 
         // 2. 保存到数据库
-        ${entityVariable}Mapper.insertSelective(${entityVariable}PO, true);
+        ${entityVariable}Mapper.insertSelective(${entityVariable}PO);
 
         // 3. 返回新增结果
         return ${entityVariable}PO.getId();
