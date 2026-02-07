@@ -1,6 +1,11 @@
 package ${mapperPackage};
 
 import ${entityPackage}.${entityName}PO;
+import ${requestPackage}.${entityName}PageQuery;
+import ${responsePackage}.${entityName}RespVO;
+import com.mybatisflex.core.paginate.Page;
+import com.mybatisflex.core.query.If;
+import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -10,4 +15,33 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface ${entityName}Mapper extends BaseMapper<${entityName}PO> {
 
+    default Page<${entityName}RespVO> pageQuery(${entityName}PageQuery query) {
+        QueryWrapper queryWrapper = QueryWrapper.create()
+                .select()
+                .from(${entityName}PO.class)
+##                .where(${tableConstantName}_PO.DELETED.eq(0))
+            #foreach($column in $columns)
+                #if(!$column.isPrimary && !$column.isLogicDelete)
+                    #if($column.name.endsWith("_name") || $column.name.endsWith("_title") ||
+                        $column.name.endsWith("_remark") || $column.name.endsWith("_desc") ||
+                        $column.name.endsWith("_description") || $column.name.endsWith("_key") ||
+                        $column.name.endsWith("_value"))
+                .and(${entityName}PO::get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}).like(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::hasText)
+                    #elseif($column.dataType == "int" || $column.dataType == "tinyint" || $column.dataType == "smallint" || $column.dataType == "bigint" || $column.dataType == "integer")
+                .and(${entityName}PO::get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}).eq(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::notNull)
+                    #elseif($column.dataType == "varchar" || $column.dataType == "char" || $column.dataType == "text" || $column.dataType == "longtext" || $column.dataType == "mediumtext")
+                .and(${entityName}PO::get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}).eq(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::hasText)
+                    #elseif($column.dataType == "decimal" || $column.dataType == "numeric" || $column.dataType == "float" || $column.dataType == "double")
+##                .and(${tableConstantName}_PO.${column.name.toUpperCase()}.eq(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::notNull))
+                    #elseif($column.dataType == "datetime" || $column.dataType == "timestamp" || $column.dataType == "date")
+                .and(${entityName}PO::get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}).between(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}())
+                    #elseif($column.dataType == "bit" || ($column.dataType == "tinyint" && $column.columnType.toLowerCase().contains("tinyint(1)")))
+                .and(${entityName}PO::get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}).eq(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::notNull)
+                    #else
+                .and(${entityName}PO::get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}).eq(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::notNull)
+                    #end
+                #end
+            #end                .orderBy(${entityName}PO::getId, false);
+        return paginateAs(query.getPageNo(), query.getPageSize(), queryWrapper, ${entityName}RespVO.class);
+    }
 }

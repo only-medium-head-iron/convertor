@@ -13,14 +13,17 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.Max;
 #end
 #if($hasLocalDateTime)
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 #end
 #if($hasLocalDate)
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDate;
 #end
 #if($hasBigDecimal)
 import java.math.BigDecimal;
 #end
+
 /**
  * 创建${comment}请求
  */
@@ -28,7 +31,7 @@ import java.math.BigDecimal;
 @Schema(description = "创建${comment}请求")
 public class ${entityName}CreateReq {
 #foreach($column in $columns)
-#if(!$column.isPrimary && !$column.isLogicDelete && !$column.isBaseEntityField)
+#if(!$column.isPrimary && !$column.isLogicDelete && !$column.isBaseEntityField && !$column.isTimestampField)
 
     /**
      * ${column.comment}
@@ -61,5 +64,14 @@ public class ${entityName}CreateReq {
     #end
     private ${column.javaTypeSimpleName} ${column.propertyName};
 #end
+    #if($column.isTimestampField)
+
+    /**
+     * ${column.comment}
+     */
+    @Schema(description = "${column.comment}", example = "\"2026-01-01 00:00:00\"")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private LocalDateTime ${column.propertyName};
+    #end
 #end
 }

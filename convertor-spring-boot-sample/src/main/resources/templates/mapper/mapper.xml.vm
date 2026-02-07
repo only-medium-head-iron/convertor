@@ -3,18 +3,4 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="${mapperPackage}.${entityName}Mapper">
 
-    <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="${entityPackage}.${entityName}PO">
-#foreach($column in $columns)
-<result column="${column.name}" property="${column.propertyName}" jdbcType="${column.jdbcType}"/>
-#end
-</resultMap>
-
-    <!-- 通用查询结果列 -->
-    <sql id="Base_Column_List">
-#foreach($column in $columns)
-    ${column.name}#if($foreach.hasNext), #end
-#end
-</sql>
-
 </mapper>

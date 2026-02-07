@@ -75,12 +75,7 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
 
     @Override
     public Page<${entityName}RespVO> pageQuery(${entityName}PageQuery query) {
-
-        // 1. 构建查询条件
-        QueryWrapper queryWrapper = buildQueryWrapper(query);
-
-        // 2. 执行分页查询
-        return ${entityVariable}Mapper.paginateAs(query.getPageNo(), query.getPageSize(), queryWrapper, ${entityName}RespVO.class);
+        return ${entityVariable}Mapper.pageQuery(query);
 ##        // 排序
 ##        if (StringUtils.hasText(query.getSortField())) {
 ##            if ("desc".equalsIgnoreCase(query.getSortOrder())) {
@@ -91,35 +86,6 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
 ##        } else {
 ##            queryWrapper.orderBy(${tableConstantName}.CREATE_TIME.desc());
 ##        }
-    }
-
-    private static QueryWrapper buildQueryWrapper(${entityName}PageQuery query) {
-        return QueryWrapper.create()
-                .select()
-                .from(${tableConstantName}_PO)
-##                .where(${tableConstantName}_PO.DELETED.eq(0))
-    #foreach($column in $columns)
-        #if(!$column.isPrimary && !$column.isLogicDelete)
-            #if($column.name.endsWith("_name") || $column.name.endsWith("_title") ||
-                $column.name.endsWith("_remark") || $column.name.endsWith("_desc") ||
-                $column.name.endsWith("_description") || $column.name.endsWith("_key") ||
-                $column.name.endsWith("_value"))
-                .and(${tableConstantName}_PO.${column.name.toUpperCase()}.like(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::hasText))
-            #elseif($column.dataType == "int" || $column.dataType == "tinyint" || $column.dataType == "smallint" || $column.dataType == "bigint" || $column.dataType == "integer")
-                .and(${tableConstantName}_PO.${column.name.toUpperCase()}.eq(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::notNull))
-            #elseif($column.dataType == "varchar" || $column.dataType == "char" || $column.dataType == "text" || $column.dataType == "longtext" || $column.dataType == "mediumtext")
-                .and(${tableConstantName}_PO.${column.name.toUpperCase()}.eq(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::hasText))
-            #elseif($column.dataType == "decimal" || $column.dataType == "numeric" || $column.dataType == "float" || $column.dataType == "double")
-##                .and(${tableConstantName}_PO.${column.name.toUpperCase()}.eq(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::notNull))
-            #elseif($column.dataType == "datetime" || $column.dataType == "timestamp" || $column.dataType == "date")
-                .and(${tableConstantName}_PO.${column.name.toUpperCase()}.between(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}()))
-            #elseif($column.dataType == "bit" || ($column.dataType == "tinyint" && $column.columnType.toLowerCase().contains("tinyint(1)")))
-                .and(${tableConstantName}_PO.${column.name.toUpperCase()}.eq(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::notNull))
-            #else
-                .and(${tableConstantName}_PO.${column.name.toUpperCase()}.eq(query.get${column.propertyName.substring(0,1).toUpperCase()}${column.propertyName.substring(1)}(), If::notNull))
-            #end
-        #end
-    #end                .orderBy(${tableConstantName}_PO.ID, false);
     }
 
     /**

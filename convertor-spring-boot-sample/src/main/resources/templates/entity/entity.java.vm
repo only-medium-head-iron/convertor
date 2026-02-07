@@ -32,8 +32,10 @@ public class ${entityName}PO extends BaseEntity {
      */
     #if($column.isPrimary)
     @Id#if($column.autoIncrement)(keyType = com.mybatisflex.annotation.KeyType.Auto)#end
-    #end
+    private Long ${column.propertyName};
+    #else
     private ${column.javaTypeSimpleName} ${column.propertyName};
+    #end
 #end
 #end
 }

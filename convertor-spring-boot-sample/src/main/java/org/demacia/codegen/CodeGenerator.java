@@ -426,9 +426,7 @@ public class CodeGenerator {
      */
     private static boolean isLogicDeleteField(String columnName) {
         String lowerName = columnName.toLowerCase();
-        return "deleted".equals(lowerName) ||
-                "is_deleted".equals(lowerName) ||
-                lowerName.endsWith("_deleted");
+        return "deleted".equals(lowerName);
     }
 
     /**
@@ -447,8 +445,10 @@ public class CodeGenerator {
     private static boolean isBaseEntityField(String columnName) {
         String lowerName = columnName.toLowerCase();
         return "create_by".equals(lowerName) ||
+                "create_name".equals(lowerName) ||
                 "create_time".equals(lowerName) ||
                 "update_by".equals(lowerName) ||
+                "update_name".equals(lowerName) ||
                 "update_time".equals(lowerName) ||
                 "deleted".equals(lowerName);
     }
