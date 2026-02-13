@@ -16,7 +16,12 @@ public class BaseEntity implements Serializable {
     /**
      * 创建人
      */
-    private String createBy;
+    private Long createBy;
+
+    /**
+     * 创建人
+     */
+    private String createName;
 
     /**
      * 创建时间
@@ -26,7 +31,12 @@ public class BaseEntity implements Serializable {
     /**
      * 更新人
      */
-    private String updateBy;
+    private Long updateBy;
+
+    /**
+     * 更新人
+     */
+    private String updateName;
 
     /**
      * 更新时间
