@@ -11,6 +11,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.demacia.constant.Const;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -26,12 +27,18 @@ public class MessageFormatter {
             return "";
         }
         String msg = "";
+        Map<String, Object> defaultRspMap = new LinkedHashMap<>();
         if (StrUtil.equalsIgnoreCase(msgFormat, Const.MsgFormat.XML)) {
-            String rootName = map.keySet().iterator().next();
-            Map<String, Object> toMap = BeanUtil.beanToMap(map.get(rootName));
+            if (map.size() > 1) {
+                defaultRspMap.put("response", map);
+            } else if (map.size() == 1) {
+                defaultRspMap.putAll(map);
+            }
+            String rootName = defaultRspMap.keySet().iterator().next();
+            Map<String, Object> toMap = BeanUtil.beanToMap(defaultRspMap.get(rootName));
             msg = XmlUtil.mapToXmlStr(toMap, rootName);
         } else {
-            msg = JSONUtil.toJsonStr(map);
+            msg = JSONUtil.toJsonStr(defaultRspMap);
         }
         return msg;
     }

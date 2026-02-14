@@ -36,9 +36,6 @@ import java.util.*;
 @Service
 public class ReceiveService extends AbstractService {
 
-    private static final String RSP_WRAPPER_KEY = "response";
-    private static final int DEFAULT_MAP_CAPACITY = 16;
-
     @Resource
     private Convertor convertor;
 
@@ -85,10 +82,11 @@ public class ReceiveService extends AbstractService {
             rsp.setMessageExternal("请求失败，请联系相关人员告知原因！");
             rspMsg = buildErrorResponse(context, rsp);
         } finally {
+            stopWatch.stop();
+            context.setCost(stopWatch.getTotalTimeMillis());
             recordLogAndClearContext(context);
         }
 
-        stopWatch.stop();
         log.info("处理外部请求耗时：{} 毫秒", stopWatch.getTotalTimeMillis());
         return rspMsg;
     }
@@ -188,7 +186,7 @@ public class ReceiveService extends AbstractService {
             return;
         }
 
-        LinkedHashMap<String, Object> reqMap = new LinkedHashMap<>(DEFAULT_MAP_CAPACITY);
+        LinkedHashMap<String, Object> reqMap = new LinkedHashMap<>(32);
         convertor.parseMappingRules(BeanUtil.beanToMap(context), reqMap, rules);
         context.setReq(BeanUtil.toBean(reqMap, Req.class));
     }
@@ -203,7 +201,7 @@ public class ReceiveService extends AbstractService {
             return;
         }
 
-        LinkedHashMap<String, Object> preMap = new LinkedHashMap<>(DEFAULT_MAP_CAPACITY);
+        LinkedHashMap<String, Object> preMap = new LinkedHashMap<>(32);
         convertor.parseMappingRules(BeanUtil.beanToMap(context), preMap, rules);
         context.setPre(BeanUtil.toBean(preMap, Pre.class));
     }
@@ -290,26 +288,13 @@ public class ReceiveService extends AbstractService {
 
         if (CollUtil.isEmpty(rules)) {
             log.warn("没有找到对应的响应映射规则：{}，返回默认响应", context.getRuleCode());
-            return buildDefaultResponse(context, rspMap);
+            return rspMap;
         }
 
         Map<String, Object> contextMap = new HashMap<>(BeanUtil.beanToMap(context));
         contextMap.putAll(rspMap);
 
         return convertor.parseMappingRules(contextMap, rules);
-    }
-
-    /**
-     * 构建默认响应
-     */
-    private Map<String, Object> buildDefaultResponse(Context context, Map<String, Object> rspMap) {
-        Req req = context.getReq();
-        if (req != null && Const.MsgFormat.XML.equals(req.getFormat())) {
-            Map<String, Object> defaultRspMap = new LinkedHashMap<>();
-            defaultRspMap.put(RSP_WRAPPER_KEY, rspMap);
-            return defaultRspMap;
-        }
-        return rspMap;
     }
 
     /**
