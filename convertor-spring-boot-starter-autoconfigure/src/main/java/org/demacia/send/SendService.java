@@ -128,7 +128,7 @@ public class SendService extends AbstractService {
         context.setRetryParams(JacksonUtil.toJson(sendRequest));
         Map<String, Object> params = BeanUtil.beanToMap(sendRequest);
         context.setParams(params);
-        App app = appMapper.getApp(sendRequest.getAppCode());
+        App app = appMapper.selectByAppCode(sendRequest.getAppCode());
         if (null == app) {
             throw new ConvertException("【{}】应用未配置", sendRequest.getAppCode());
         }

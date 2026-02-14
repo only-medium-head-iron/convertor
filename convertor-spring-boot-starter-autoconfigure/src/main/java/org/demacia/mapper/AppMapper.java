@@ -9,5 +9,7 @@ import org.demacia.domain.App;
  */
 @Mapper
 public interface AppMapper {
-    App getApp(String appCode);
+    App selectByAppCode(String appCode);
+
+    App selectByAppKey(String appKey);
 }

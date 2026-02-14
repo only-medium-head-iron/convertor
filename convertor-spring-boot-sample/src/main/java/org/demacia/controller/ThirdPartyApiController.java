@@ -33,7 +33,8 @@ public class ThirdPartyApiController {
         String queryString = httpServletRequest.getQueryString();
         String requestURI = httpServletRequest.getRequestURI();
         String handlerLabel = StrUtil.subAfter(requestURI, "/api/route/" + appCode + "/", true);
-        ReceiveRequest receiveRequest = new ReceiveRequest(false, appCode, queryParams, headers, requestBody);
+        String appKey = queryParams.get("app_key");
+        ReceiveRequest receiveRequest = new ReceiveRequest(false, appCode, appKey, queryParams, headers, requestBody);
         String fullRequestURL = requestURL + (StrUtil.isNotBlank(queryString) ? "?" + queryString : "");
         log.info("receive begin full requestURL : {}, receive request: {}", fullRequestURL, receiveRequest);
         Object result = receiveService.receive(receiveRequest);

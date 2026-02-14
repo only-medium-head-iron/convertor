@@ -32,6 +32,13 @@ public class ReceiveRequest {
     private String appCode;
 
     /**
+     * 应用KEY。
+     * <p>
+     * 应用KEY。
+     */
+    private String appKey;
+
+    /**
      * 路径参数。
      * <p>
      * 采用 Map 形式存储，便于灵活处理各类请求参数。

@@ -139,7 +139,7 @@ public class ReceiveService extends AbstractService {
         context.setRetryParams(JacksonUtil.toJson(receiveRequest));
         BeanUtil.copyProperties(receiveRequest, context);
 
-        setApp(context, receiveRequest.getAppCode());
+        setApp(context, receiveRequest.getAppCode(), receiveRequest.getAppKey());
         setParams(context, receiveRequest.getReqMsg());
         setReq(context, receiveRequest.getAppCode());
 
@@ -182,7 +182,7 @@ public class ReceiveService extends AbstractService {
     private void setReq(Context context, String appCode) {
         List<RuleMapping> rules = ruleMapper.getMappingRulesByRuleCode(Const.RuleType.REQ, appCode);
         if (CollUtil.isEmpty(rules)) {
-            log.warn("没有找到请求映射规则：{}", appCode);
+            log.debug("没有找到请求映射规则：{}", appCode);
             return;
         }
 
@@ -197,7 +197,7 @@ public class ReceiveService extends AbstractService {
     private void setPre(Context context) {
         List<RuleMapping> rules = ruleMapper.getMappingRulesByRuleCode(Const.RuleType.PRE, context.getRuleCode());
         if (CollUtil.isEmpty(rules)) {
-            log.warn("没有找到前置映射规则：{}", context.getRuleCode());
+            log.debug("没有找到前置映射规则：{}", context.getRuleCode());
             return;
         }
 
@@ -263,17 +263,26 @@ public class ReceiveService extends AbstractService {
     /**
      * 设置应用信息
      */
-    private void setApp(Context context, String appCode) {
+    private void setApp(Context context, String appCode, String appKey) {
         App app;
         try {
-            app = appMapper.getApp(appCode);
+            app = appMapper.selectByAppKey(appKey);
         } catch (Exception e) {
-            log.error("查询应用信息失败，appCode: {}, 错误信息: {}", appCode, e.getMessage(), e);
+            log.error("查询应用信息失败，appKey: {}, 错误信息: {}", appKey, e.getMessage(), e);
             throw new ConvertException("查询应用信息失败");
         }
 
         if (app == null) {
-            throw new ConvertException("应用不存在: " + appCode);
+            try {
+                app = appMapper.selectByAppCode(appCode);
+            } catch (Exception e) {
+                log.error("查询应用信息失败，appCode: {}, 错误信息: {}", appCode, e.getMessage(), e);
+                throw new ConvertException("查询应用信息失败");
+            }
+        }
+
+        if (app == null) {
+            throw new ConvertException("应用不存在，请确认是否已配置！");
         }
 
         context.setApp(app);
@@ -287,7 +296,7 @@ public class ReceiveService extends AbstractService {
         Map<String, Object> rspMap = BeanUtil.beanToMap(rsp);
 
         if (CollUtil.isEmpty(rules)) {
-            log.warn("没有找到对应的响应映射规则：{}，返回默认响应", context.getRuleCode());
+            log.debug("没有找到对应的响应映射规则：{}，返回默认响应", context.getRuleCode());
             return rspMap;
         }
 
