@@ -1,10 +1,7 @@
 package org.demacia;
 
 import lombok.extern.slf4j.Slf4j;
-import org.demacia.domain.App;
-import org.demacia.domain.Context;
-import org.demacia.domain.ContextHolder;
-import org.demacia.domain.Log;
+import org.demacia.domain.*;
 import org.demacia.mapper.LogMapper;
 
 import javax.annotation.Resource;
@@ -32,8 +29,31 @@ public abstract class AbstractService {
 
     private void createLog(Context context) {
         Log log = new Log();
+//        log.setBizNo();
+
         App app = context.getApp();
-        log.setAppName(app.getAppName());
+        if (app != null) {
+            log.setAppCode(app.getAppCode());
+            log.setAppName(app.getAppName());
+        }
+
+        Api api = context.getApi();
+        if (api != null) {
+            log.setApiCode(api.getApiCode());
+            log.setApiName(api.getApiName());
+        }
+
+        log.setRequestMessage(context.getReqMsg());
+        log.setResponseMessage(context.getRspMsg());
+        log.setRetryParams(context.getRetryParams());
+
+        Rsp rsp = context.getRsp();
+        if (rsp != null) {
+            log.setRequestResult(rsp.isSuccess());
+            log.setErrorMessage(rsp.getMessage());
+        }
+
+        log.setCost(context.getCost());
         logMapper.recordLog(log);
     }
 }

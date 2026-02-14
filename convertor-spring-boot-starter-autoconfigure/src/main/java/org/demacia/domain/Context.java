@@ -141,4 +141,11 @@ public class Context {
      * 存储当前请求对应 API 服务的详细信息。
      */
     private Api api;
+
+    /**
+     * 耗时。
+     * <p>
+     * 本次接口请求的耗时。
+     */
+    private Long cost;
 }

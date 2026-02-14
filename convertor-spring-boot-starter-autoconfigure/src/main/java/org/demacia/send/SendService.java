@@ -73,12 +73,12 @@ public class SendService extends AbstractService {
             log.error("请求失败：{}", e.getMessage(), e);
             rsp.setCode(e.getCode());
             rsp.setMessage(e.getMessage());
-            rsp.setMessageForExternal(e.getMessage());
+            rsp.setMessageExternal(e.getMessage());
         } catch (Exception e) {
             log.error("请求失败：{}", e.getMessage(), e);
             rsp.setCode(ResultCode.FAILURE.getCode());
             rsp.setMessage(e.toString());
-            rsp.setMessageForExternal(ResultCode.FAILURE.getMessage());
+            rsp.setMessageExternal(ResultCode.FAILURE.getMessage());
         } finally {
             context.setRsp(rsp);
             recordLogAndClearContext(context);
@@ -100,14 +100,14 @@ public class SendService extends AbstractService {
         Api api = context.getApi();
         SendHandler sendHandler;
         try {
-            String handlerBeanName = StrUtil.lowerFirst(api.getHandler());
+            String handlerBeanName = StrUtil.lowerFirst(api.getHandlerClass());
             sendHandler = SpringUtil.getBean(handlerBeanName);
         } catch (NoSuchBeanDefinitionException e) {
             if (context.isInternalRetry()) {
                 // TODO 重试临时添加，后续迁移需要删除
                 return SpringUtil.getBean(DefaultSendHandler.class);
             }
-            log.error("没有找到对应的处理器：{}", api.getHandler());
+            log.error("没有找到对应的处理器：{}", api.getHandlerClass());
             throw new ConvertException("");
         }
         return sendHandler;

@@ -20,28 +20,20 @@ public class Rsp {
 
     /**
      * 返回码。
-     * <p>
-     * 返回码。
      */
     private String code;
 
     /**
-     * 记录详细错误信息，供内部展示。
-     * <p>
      * 记录详细错误信息，供内部展示。
      */
     private String message;
 
     /**
      * 记录模糊错误信息，供外部展示。
-     * <p>
-     * 记录模糊错误信息，供外部展示。
      */
-    private String messageForExternal;
+    private String messageExternal;
 
     /**
-     * 返回数据。
-     * <p>
      * 返回数据。
      */
     private Object data;

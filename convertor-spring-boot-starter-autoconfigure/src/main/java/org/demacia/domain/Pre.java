@@ -8,6 +8,7 @@ import lombok.Data;
  **/
 @Data
 public class Pre {
+
     /**
      * 外部编号。
      * <p>

@@ -125,11 +125,11 @@ public abstract class AbstractSendHandler implements SendHandler {
         Map<String, String> headers = buildHeaders(context);
         String query = URLUtil.buildQuery(pathParams, StandardCharsets.UTF_8);
         App app = context.getApp();
-        String pushUrl = app.getUrl();
+        String baseUrl = app.getBaseUrl();
         Api api = context.getApi();
-        String uri = api.getUri();
+        String uri = api.getApiPath();
         uri = StrUtil.isBlank(uri) ? "" : uri;
-        String url = pushUrl + uri + (StrUtil.isBlank(query) ? "" : "?" + query);
+        String url = baseUrl + uri + (StrUtil.isBlank(query) ? "" : "?" + query);
         // TODO 更改为 OkHttpUtil
         HttpRequest httpRequest = HttpUtil.createPost(url);
         if (Const.MessageFormat.FORM.equals(api.getMessageFormat())) {

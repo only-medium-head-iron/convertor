@@ -19,24 +19,25 @@ import org.demacia.exception.ConvertException;
 import org.demacia.rule.RuleMapping;
 import org.demacia.util.JacksonUtil;
 import org.demacia.util.MessageFormatter;
-import org.demacia.validate.RequestValidator;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
+ * 外部应用请求处理服务
+ *
  * @author hepenglin
  * @since 2024-08-04 17:25
- **/
+ */
 @Slf4j
 @Service
 public class ReceiveService extends AbstractService {
+
+    private static final String RSP_WRAPPER_KEY = "response";
+    private static final int DEFAULT_MAP_CAPACITY = 16;
 
     @Resource
     private Convertor convertor;
@@ -52,250 +53,304 @@ public class ReceiveService extends AbstractService {
 
     /**
      * 处理外部应用的请求
-     * 该方法根据应用代码、路径参数和请求消息来处理外部服务的请求，并返回相应的响应消息
      *
-     * @param receiveRequest 需要的参数
-     * @return 响应消息，返回给外部应用的响应数据
+     * @param receiveRequest 请求参数
+     * @return 响应消息
      */
     public String receive(ReceiveRequest receiveRequest) {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
-        String rspMsg = "";
-        Rsp rsp = new Rsp();
-        rsp.setCode(ResultCode.SUCCESS.getCode());
-        rsp.setMessage(ResultCode.SUCCESS.getMessage());
+
+        Rsp rsp = Rsp.success();
         Context context = new Context();
         ContextHolder.set(context);
+
+        String rspMsg;
+
         try {
-            initContext(context, receiveRequest);
-            validateRequest(context);
-            ReceiveHandler receiveHandler = determineWhichHandler(context);
-            receiveHandler.handle(context);
+            initializeRequest(context, receiveRequest);
+            processRequest(context);
             rsp.setSuccess(true);
+            rspMsg = buildSuccessResponse(context, rsp);
         } catch (ConvertException e) {
             log.error("外部请求处理失败：{}", e.getMessage(), e);
             rsp.setCode(e.getCode());
             rsp.setMessage(e.toString());
-            rsp.setMessageForExternal(e.getMessage());
+            rsp.setMessageExternal(e.getMessage());
+            rspMsg = buildErrorResponse(context, rsp);
         } catch (Exception e) {
             log.error("外部请求处理失败：{}", e.getMessage(), e);
             rsp.setCode(ResultCode.FAILURE.getCode());
             rsp.setMessage(e.toString());
-            rsp.setMessageForExternal("系统异常");
+            rsp.setMessageExternal("请求失败，请联系相关人员告知原因！");
+            rspMsg = buildErrorResponse(context, rsp);
         } finally {
-            context.setRsp(rsp);
-            try {
-                Map<String, Object> parseResult = parseRsp(context, rsp);
-                Req req = context.getReq();
-                String messageFormat = req != null ? req.getFormat() : Const.MsgFormat.JSON;
-                rspMsg = MessageFormatter.determineMsgFormat(parseResult, messageFormat);
-                context.setRspMsg(rspMsg);
-            } catch (Exception e) {
-                log.error("响应解析失败：{}", e.getMessage(), e);
-                rsp.setSuccess(false);
-                rsp.setMessage(e.toString());
-            } finally {
-                recordLogAndClearContext(context);
-            }
+            recordLogAndClearContext(context);
         }
+
         stopWatch.stop();
-        log.info("处理外部请求耗时：{} ms", stopWatch.getTotalTimeMillis());
+        log.info("处理外部请求耗时：{} 毫秒", stopWatch.getTotalTimeMillis());
         return rspMsg;
     }
 
     /**
-     * 根据上下文获取接收处理程序实例
-     * 此方法通过Spring上下文获取指定名称的Bean作为接收处理程序
-     * 如果无法找到对应的Bean，则抛出异常提示应用处理器错误
-     *
-     * @param context 上下文对象
-     * @return 返回获取到的接收处理程序实例
+     * 构建成功响应
      */
-    private ReceiveHandler determineWhichHandler(Context context) {
-        Api api = context.getApi();
-        String handlerBeanName = api.getHandler();
-        ReceiveHandler receiveHandler;
+    private String buildSuccessResponse(Context context, Rsp rsp) {
+        context.setRsp(rsp);
         try {
-            receiveHandler = SpringUtil.getBean(StrUtil.lowerFirst(handlerBeanName));
-        } catch (NoSuchBeanDefinitionException e) {
-            throw new ConvertException("没有找到对应的处理器");
+            Map<String, Object> parseResult = parseResponse(context, rsp);
+            String messageFormat = Optional.ofNullable(context.getReq())
+                    .map(Req::getFormat)
+                    .orElse(Const.MsgFormat.JSON);
+
+            String rspMsg = MessageFormatter.determineMsgFormat(parseResult, messageFormat);
+            context.setRspMsg(rspMsg);
+            return rspMsg;
+        } catch (Exception e) {
+            log.error("响应解析失败：{}", e.getMessage(), e);
+            rsp.setSuccess(false);
+            rsp.setMessage(e.toString());
+            return JSONUtil.toJsonStr(DefaultResponse.failure(rsp.getCode(), rsp.getMessageExternal()));
         }
-        return receiveHandler;
     }
 
     /**
-     * 初始化上下文对象
-     * 该方法主要用于设置和验证API调用的上下文环境，包括路径参数、请求消息、应用信息、服务信息等
-     *
-     * @param context        上下文对象，用于承载API调用的相关信息
-     * @param receiveRequest 请求参数，包含请求头、路径参数、请求体
+     * 构建错误响应
      */
-    public void initContext(Context context, ReceiveRequest receiveRequest) {
+    private String buildErrorResponse(Context context, Rsp rsp) {
+        context.setRsp(rsp);
+        try {
+            Map<String, Object> parseResult = parseResponse(context, rsp);
+            String messageFormat = Optional.ofNullable(context.getReq())
+                    .map(Req::getFormat)
+                    .orElse(Const.MsgFormat.JSON);
+
+            return MessageFormatter.determineMsgFormat(parseResult, messageFormat);
+        } catch (Exception e) {
+            log.error("错误响应解析失败：{}", e.getMessage(), e);
+            return JSONUtil.toJsonStr(DefaultResponse.failure(rsp.getCode(), rsp.getMessageExternal()));
+        }
+    }
+
+    /**
+     * 初始化请求上下文
+     */
+    private void initializeRequest(Context context, ReceiveRequest receiveRequest) {
         context.setDirection(Const.Direction.RECEIVE);
         context.setRetryParams(JacksonUtil.toJson(receiveRequest));
-        String reqMsg = receiveRequest.getReqMsg();
-        String appCode = receiveRequest.getAppCode();
         BeanUtil.copyProperties(receiveRequest, context);
-        setApp(context, appCode);
-        setParams(context, reqMsg);
-        setReq(context, appCode);
-        String apiCode = context.getReq().getApiCode();
-        if (StrUtil.isBlank(apiCode)) {
-            throw new ConvertException("apiCode服务编码不能为空");
-        }
-        context.setRuleCode(appCode + StrUtil.DASHED + apiCode);
+
+        setApp(context, receiveRequest.getAppCode());
+        setParams(context, receiveRequest.getReqMsg());
+        setReq(context, receiveRequest.getAppCode());
+
+        String apiCode = Optional.ofNullable(context.getReq())
+                .map(Req::getApiCode)
+                .orElseThrow(() -> new ConvertException("接口编码不能为空"));
+
+        context.setRuleCode(receiveRequest.getAppCode() + StrUtil.DASHED + apiCode);
         setPre(context);
         setApi(context, apiCode);
     }
 
     /**
-     * 根据应用代码设置请求对象Req
-     * 该方法通过应用代码查询相关的规则映射，将这些规则映射应用到当前上下文对象的请求实体中
-     *
-     * @param context 上下文对象，包含请求和响应等信息
-     * @param appCode 应用代码，用于查询规则映射
+     * 处理请求
      */
-    private void setReq(Context context, String appCode) {
-        List<RuleMapping> reqRules = ruleMapper.getMappingRulesByRuleCode(Const.RuleType.REQ, appCode);
-        if (CollUtil.isEmpty(reqRules)) {
-            log.warn("没有找到请求映射规则：{}", appCode);
-            return;
-        }
-        LinkedHashMap<String, Object> reqMap = new LinkedHashMap<>(16);
-        convertor.parseMappingRules(BeanUtil.beanToMap(context), reqMap, reqRules);
-        Req req = BeanUtil.toBean(reqMap, Req.class);
-        context.setReq(req);
+    private void processRequest(Context context) {
+        validateRequest(context);
+        ReceiveHandler receiveHandler = determineWhichHandler(context);
+        receiveHandler.handle(context);
     }
 
     /**
-     * 根据服务码设置订单信息
-     *
-     * @param context 上下文对象，用于传递请求过程中的数据
+     * 根据上下文获取接收处理程序实例
+     */
+    private ReceiveHandler determineWhichHandler(Context context) {
+        String handlerBeanName = Optional.ofNullable(context.getApi())
+                .map(Api::getHandlerClass)
+                .orElseThrow(() -> new ConvertException("API处理器配置不能为空"));
+
+        try {
+            return SpringUtil.getBean(StrUtil.lowerFirst(handlerBeanName));
+        } catch (NoSuchBeanDefinitionException e) {
+            throw new ConvertException("没有找到对应的处理器: " + handlerBeanName);
+        }
+    }
+
+    /**
+     * 设置请求对象Req
+     */
+    private void setReq(Context context, String appCode) {
+        List<RuleMapping> rules = ruleMapper.getMappingRulesByRuleCode(Const.RuleType.REQ, appCode);
+        if (CollUtil.isEmpty(rules)) {
+            log.warn("没有找到请求映射规则：{}", appCode);
+            return;
+        }
+
+        LinkedHashMap<String, Object> reqMap = new LinkedHashMap<>(DEFAULT_MAP_CAPACITY);
+        convertor.parseMappingRules(BeanUtil.beanToMap(context), reqMap, rules);
+        context.setReq(BeanUtil.toBean(reqMap, Req.class));
+    }
+
+    /**
+     * 设置前置信息
      */
     private void setPre(Context context) {
-        List<RuleMapping> preRules = ruleMapper.getMappingRulesByRuleCode(Const.RuleType.PRE, context.getRuleCode());
-        if (CollUtil.isEmpty(preRules)) {
+        List<RuleMapping> rules = ruleMapper.getMappingRulesByRuleCode(Const.RuleType.PRE, context.getRuleCode());
+        if (CollUtil.isEmpty(rules)) {
             log.warn("没有找到前置映射规则：{}", context.getRuleCode());
             return;
         }
-        LinkedHashMap<String, Object> preMap = new LinkedHashMap<>(16);
-        convertor.parseMappingRules(BeanUtil.beanToMap(context), preMap, preRules);
-        Pre pre = BeanUtil.toBean(preMap, Pre.class);
-        context.setPre(pre);
+
+        LinkedHashMap<String, Object> preMap = new LinkedHashMap<>(DEFAULT_MAP_CAPACITY);
+        convertor.parseMappingRules(BeanUtil.beanToMap(context), preMap, rules);
+        context.setPre(BeanUtil.toBean(preMap, Pre.class));
     }
 
     /**
      * 设置请求参数
-     * 根据请求消息的格式（JSON或XML），将其解析为参数Map，并设置到上下文对象中
-     *
-     * @param context 上下文对象，用于承载解析后的请求参数
-     * @param reqMsg  请求消息，可以是JSON或XML格式
-     * @throws ConvertException 如果请求消息既不是JSON也不是XML格式，则抛出转换错误的服务异常
      */
     private void setParams(Context context, String reqMsg) {
-        Map<String, Object> params;
-        try {
-            // TODO 如果是JSON数组，JSONArray jsonArray = JSONUtil.parseArray(reqMsg); 待测试
-            if (JSONUtil.isTypeJSONObject(reqMsg)) {
-                params = JSONUtil.parseObj(reqMsg, true);
-            } else if (JSONUtil.isTypeJSONArray(reqMsg)) {
-//                JSONArray jsonArray = JSONUtil.parseArray(reqMsg, true);
-                params = new HashMap<>();
-            } else {
-                params = XmlUtil.xmlToMap(reqMsg);
-            }
-        } catch (Exception e) {
-            log.error("请求报文解析失败，既不是有效的JSON也不是XML格式: {}", e.getMessage(), e);
-            throw new ConvertException("请求报文不是JSON或XML格式");
-        }
+        Map<String, Object> params = parseRequestMessage(reqMsg);
         context.setParams(params);
     }
 
     /**
-     * 设置API服务信息到上下文对象中
-     *
-     * @param context     上下文对象，包含API应用相关信息
-     * @param apiCode 服务代码，用于标识特定的服务
-     *                    <p>
-     *                    通过上下文对象获取API应用ID和服务代码，查询对应的API服务信息
-     *                    如果服务不存在，则抛出异常提示服务不存在
-     *                    否则将查询到的服务信息设置到上下文对象中，供后续处理使用
+     * 解析请求消息
+     */
+    private Map<String, Object> parseRequestMessage(String reqMsg) {
+        if (StrUtil.isBlank(reqMsg)) {
+            return new HashMap<>();
+        }
+
+        try {
+            if (JSONUtil.isTypeJSONObject(reqMsg)) {
+                return JSONUtil.parseObj(reqMsg, true);
+            } else if (JSONUtil.isTypeJSONArray(reqMsg)) {
+                // TODO: 处理JSON数组场景
+                log.debug("收到JSON数组格式的请求消息");
+                return new HashMap<>();
+            } else {
+                return XmlUtil.xmlToMap(reqMsg);
+            }
+        } catch (Exception e) {
+            log.error("请求报文解析失败: {}", e.getMessage(), e);
+            throw new ConvertException("请求报文不是JSON或XML格式");
+        }
+    }
+
+    /**
+     * 设置API服务信息
      */
     private void setApi(Context context, String apiCode) {
-        App app = context.getApp();
-        Api api = apiMapper.getApi(app.getId(), apiCode);
-        if (null == api) {
-            throw new ConvertException("");
+        App app = Optional.ofNullable(context.getApp())
+                .orElseThrow(() -> new ConvertException("应用信息不存在"));
+
+        Api api;
+        try {
+            api = apiMapper.getApi(app.getId(), apiCode);
+        } catch (Exception e) {
+            log.error("查询API服务失败，appId: {}, apiCode: {}, 错误信息: {}", app.getId(), apiCode, e.getMessage(), e);
+            throw new ConvertException("查询API服务失败");
         }
+
+        if (api == null) {
+            throw new ConvertException("API服务不存在: " + apiCode);
+        }
+
         context.setApi(api);
     }
 
     /**
-     * 根据应用代码设置API应用信息到上下文中
-     *
-     * @param context 上下文对象，用于存储API应用信息
-     * @param appCode 应用代码，用于唯一标识一个应用
+     * 设置应用信息
      */
     private void setApp(Context context, String appCode) {
-        App app = appMapper.getApp(appCode);
-        if (null == app) {
-            throw new ConvertException("");
+        App app;
+        try {
+            app = appMapper.getApp(appCode);
+        } catch (Exception e) {
+            log.error("查询应用信息失败，appCode: {}, 错误信息: {}", appCode, e.getMessage(), e);
+            throw new ConvertException("查询应用信息失败");
         }
+
+        if (app == null) {
+            throw new ConvertException("应用不存在: " + appCode);
+        }
+
         context.setApp(app);
     }
 
     /**
      * 解析响应对象
-     *
-     * @param context 上下文对象，包含请求相关信息
-     * @param rsp     响应对象，包含需要解析的数据
-     * @return 解析后的响应参数，以Map形式返回
      */
-    public Map<String, Object> parseRsp(Context context, Rsp rsp) {
+    public Map<String, Object> parseResponse(Context context, Rsp rsp) {
         List<RuleMapping> rules = ruleMapper.getMappingRulesByRuleCode(Const.RuleType.RSP, context.getRuleCode());
         Map<String, Object> rspMap = BeanUtil.beanToMap(rsp);
+
         if (CollUtil.isEmpty(rules)) {
             log.warn("没有找到对应的响应映射规则：{}，返回默认响应", context.getRuleCode());
-            // 返回默认响应
-            Req req = context.getReq();
-            if (req != null && Const.MsgFormat.XML.equals(req.getFormat())) {
-                Map<String, Object> defaultRspMap = new LinkedHashMap<>();
-                defaultRspMap.put("response", rspMap);
-                return defaultRspMap;
-            }
-            return rspMap;
+            return buildDefaultResponse(context, rspMap);
         }
-        Map<String, Object> rspParams;
-        Map<String, Object> contextMap = BeanUtil.beanToMap(context);
+
+        Map<String, Object> contextMap = new HashMap<>(BeanUtil.beanToMap(context));
         contextMap.putAll(rspMap);
-        rspParams = convertor.parseMappingRules(contextMap, rules);
-        return rspParams;
+
+        return convertor.parseMappingRules(contextMap, rules);
+    }
+
+    /**
+     * 构建默认响应
+     */
+    private Map<String, Object> buildDefaultResponse(Context context, Map<String, Object> rspMap) {
+        Req req = context.getReq();
+        if (req != null && Const.MsgFormat.XML.equals(req.getFormat())) {
+            Map<String, Object> defaultRspMap = new LinkedHashMap<>();
+            defaultRspMap.put(RSP_WRAPPER_KEY, rspMap);
+            return defaultRspMap;
+        }
+        return rspMap;
     }
 
     /**
      * 验证请求的合法性
-     *
-     * @param context 请求上下文，包含请求信息和应用信息
      */
     private void validateRequest(Context context) {
         if (context.isInternalRetry()) {
             return;
         }
-        Req req = context.getReq();
-        App app = context.getApp();
-        RequestValidator.validateRepeatRequest(req.getReqId(), app.getValidTime());
-        RequestValidator.validateTimeExpired(req.getTimestamp(), app.getValidTime());
-        // 是否要签名验证
-        String signMethod = app.getSignMethod();
-        if (Const.SignMethod.NOT_REQUIRED.equals(signMethod)) {
+
+        Req req = Optional.ofNullable(context.getReq())
+                .orElseThrow(() -> new ConvertException("请求信息不存在"));
+        App app = Optional.ofNullable(context.getApp())
+                .orElseThrow(() -> new ConvertException("应用信息不存在"));
+
+        validateRequestBasics(req, app);
+        validateRequestSignature(req, app);
+    }
+
+    /**
+     * 验证请求基础信息
+     */
+    private void validateRequestBasics(Req req, App app) {
+//        RequestValidator.validateRepeatRequest(req.getReqId(), app.getValidTime());
+//        RequestValidator.validateTimeExpired(req.getTimestamp(), app.getValidTime());
+    }
+
+    /**
+     * 验证请求签名
+     */
+    private void validateRequestSignature(Req req, App app) {
+        if (!app.getSignRequired()) {
             return;
         }
+
         String rcvSign = req.getRcvSign();
         String genSign = req.getGenSign();
+
         if (!StrUtil.equals(rcvSign, genSign)) {
-            log.error("签名验证失败，rcvSign: {}, genSign: {}, pathParams: {}, headers: {}, reqMsg: {}",
-                    rcvSign, genSign, context.getQueryParams(), context.getHeaders(), context.getReqMsg());
-            throw new ConvertException("");
+            log.error("签名验证失败，rcvSign: {}, genSign: {}", rcvSign, genSign);
+            throw new ConvertException("签名验证失败");
         }
     }
 }
