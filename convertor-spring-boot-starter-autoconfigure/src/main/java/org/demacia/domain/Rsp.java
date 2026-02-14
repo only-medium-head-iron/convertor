@@ -2,6 +2,7 @@ package org.demacia.domain;
 
 
 import lombok.Data;
+import org.demacia.enums.ResultCode;
 
 /**
  * @author hepenglin
@@ -44,4 +45,12 @@ public class Rsp {
      * 返回数据。
      */
     private Object data;
+
+    public static Rsp success() {
+        Rsp rsp = new Rsp();
+        rsp.setSuccess(true);
+        rsp.setCode(ResultCode.SUCCESS.getCode());
+        rsp.setMessage(ResultCode.SUCCESS.getMessage());
+        return rsp;
+    }
 }
