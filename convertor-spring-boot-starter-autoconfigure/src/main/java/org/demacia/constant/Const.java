@@ -122,7 +122,7 @@ public class Const {
      * <p>
      * 1-接收，2-发送
      */
-    public static class CallType {
+    public static class Direction {
         public static final int RECEIVE = 1;
         public static final int SEND = 2;
     }

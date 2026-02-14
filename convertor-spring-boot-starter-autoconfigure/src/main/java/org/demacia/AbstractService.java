@@ -22,8 +22,7 @@ public abstract class AbstractService {
 
     public void recordLogAndClearContext(Context context) {
         try {
-            Log log = buildLog(context);
-            logMapper.recordLog(log);
+            createLog(context);
         } catch (Exception e) {
             log.error("接口日志落库失败：{}", e.getMessage(), e);
         } finally {
@@ -31,10 +30,10 @@ public abstract class AbstractService {
         }
     }
 
-    private Log buildLog(Context context) {
+    private void createLog(Context context) {
         Log log = new Log();
         App app = context.getApp();
         log.setAppName(app.getAppName());
-        return log;
+        logMapper.recordLog(log);
     }
 }

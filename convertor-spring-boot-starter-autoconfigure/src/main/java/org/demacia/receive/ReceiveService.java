@@ -131,7 +131,7 @@ public class ReceiveService extends AbstractService {
      * @param receiveRequest 请求参数，包含请求头、路径参数、请求体
      */
     public void initContext(Context context, ReceiveRequest receiveRequest) {
-        context.setCallType(Const.CallType.RECEIVE);
+        context.setDirection(Const.Direction.RECEIVE);
         context.setRetryParams(JacksonUtil.toJson(receiveRequest));
         String reqMsg = receiveRequest.getReqMsg();
         String appCode = receiveRequest.getAppCode();

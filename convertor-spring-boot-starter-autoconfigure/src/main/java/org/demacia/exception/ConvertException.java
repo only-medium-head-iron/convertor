@@ -1,5 +1,6 @@
 package org.demacia.exception;
 
+import cn.hutool.core.util.StrUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.demacia.enums.ResultCode;
@@ -23,5 +24,10 @@ public class ConvertException extends RuntimeException {
     public ConvertException(String code, String message) {
         this.code = code;
         this.message = message;
+    }
+
+    public ConvertException(ResultCode resultCode, Object... params) {
+        this.code = resultCode.getCode();
+        this.message = StrUtil.format(resultCode.getMessage(), params);
     }
 }

@@ -124,7 +124,7 @@ public class SendService extends AbstractService {
         Pre pre = new Pre();
         pre.setBizNo(sendRequest.getBizNo());
         context.setPre(pre);
-        context.setCallType(Const.CallType.SEND);
+        context.setDirection(Const.Direction.SEND);
         context.setRetryParams(JacksonUtil.toJson(sendRequest));
         Map<String, Object> params = BeanUtil.beanToMap(sendRequest);
         context.setParams(params);

@@ -18,7 +18,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/api/route/")
-public class ApiController {
+public class ThirdPartyApiController {
 
     @Resource
     private ReceiveService receiveService;

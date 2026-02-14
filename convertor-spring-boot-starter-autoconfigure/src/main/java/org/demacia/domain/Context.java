@@ -17,11 +17,11 @@ import java.util.Map;
 public class Context {
 
     /**
-     * 调用类型。
+     * 调用方向。
      * <p>
      * 1-接收，2-发送。
      */
-    private Integer callType;
+    private Integer direction;
 
     /**
      * 是否直接调用。
