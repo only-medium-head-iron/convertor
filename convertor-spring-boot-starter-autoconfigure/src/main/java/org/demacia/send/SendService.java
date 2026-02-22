@@ -27,15 +27,21 @@ import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import static org.demacia.enums.ResultCode.APP_NOT_FOUND;
 
 /**
+ * 统一API推送请求处理服务
+ *
  * @author hepenglin
  * @since 2024-08-10 09:35
- **/
+ */
 @Slf4j
 @Service
 public class SendService extends AbstractService {
+
+    private static final int DEFAULT_MAP_CAPACITY = 16;
 
     @Resource
     private AppMapper appMapper;
@@ -51,132 +57,259 @@ public class SendService extends AbstractService {
 
     /**
      * 处理统一API推送请求
-     * 该方法负责初始化上下文，根据上下文获取处理程序，并使用该处理程序处理上下文
-     * 如果处理过程中抛出异常，则会记录错误并设置响应码和响应信息
      *
-     * @param sendRequest 推送请求数据传输对象，包含推送所需的信息
-     * @return Rsp 响应数据传输对象，包含处理结果和响应信息
+     * @param sendRequest 推送请求参数
+     * @return 响应数据传输对象
      */
     public Rsp send(SendRequest sendRequest) {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
+
         Rsp rsp = new Rsp();
         Context context = new Context();
         ContextHolder.set(context);
+
         try {
-            initContext(context, sendRequest);
-            SendHandler sendHandler = determineWhichHandler(context);
-            sendHandler.handle(context);
-            Map<String, Object> rspMap = parseRsp(context);
-            rsp = BeanUtil.toBean(rspMap, Rsp.class);
+            initializeContext(context, sendRequest);
+            processRequest(context);
+            rsp = buildResponse(context);
         } catch (ConvertException e) {
-            log.error("请求失败：{}", e.getMessage(), e);
+            log.error("请求外部处理失败：{}", e.getMessage(), e);
             rsp.setCode(e.getCode());
             rsp.setMessage(e.getMessage());
             rsp.setMessageExternal(e.getMessage());
         } catch (Exception e) {
-            log.error("请求失败：{}", e.getMessage(), e);
+            log.error("请求外部处理失败：{}", e.getMessage(), e);
             rsp.setCode(ResultCode.FAILURE.getCode());
             rsp.setMessage(e.toString());
             rsp.setMessageExternal(ResultCode.FAILURE.getMessage());
         } finally {
             context.setRsp(rsp);
+            stopWatch.stop();
+            context.setCost(stopWatch.getTotalTimeMillis());
+            log.info("处理耗时：{} 毫秒", stopWatch.getTotalTimeMillis());
             recordLogAndClearContext(context);
         }
-        stopWatch.stop();
-        log.info("处理耗时：{} ms", stopWatch.getTotalTimeMillis());
+
         return rsp;
     }
 
     /**
-     * 根据上下文获取发送处理器
-     * 此方法旨在通过Spring容器获取特定的发送处理器Bean
-     * 如果无法找到对应的Bean，则抛出异常，指示应用程序处理逻辑出错
-     *
-     * @param context 上下文对象，用于获取API服务信息
-     * @return SendHandler 返回对应的发送处理器实例
+     * 构建响应对象
      */
-    private SendHandler determineWhichHandler(Context context) {
-        Api api = context.getApi();
-        SendHandler sendHandler;
+    private Rsp buildResponse(Context context) {
         try {
-            String handlerBeanName = StrUtil.lowerFirst(api.getHandlerClass());
-            sendHandler = SpringUtil.getBean(handlerBeanName);
-        } catch (NoSuchBeanDefinitionException e) {
-            if (context.isInternalRetry()) {
-                // TODO 重试临时添加，后续迁移需要删除
-                return SpringUtil.getBean(DefaultSendHandler.class);
-            }
-            log.error("没有找到对应的处理器：{}", api.getHandlerClass());
-            throw new ConvertException("");
+            Map<String, Object> rspMap = parseResponse(context);
+            return BeanUtil.toBean(rspMap, Rsp.class);
+        } catch (Exception e) {
+            log.error("响应解析失败：{}", e.getMessage(), e);
+            Rsp rsp = new Rsp();
+            rsp.setCode(ResultCode.FAILURE.getCode());
+            rsp.setMessage(e.toString());
+            rsp.setMessageExternal(ResultCode.FAILURE.getMessage());
+            return rsp;
         }
-        return sendHandler;
     }
 
     /**
      * 初始化上下文
-     * 此方法用于初始化上下文对象，设置请求参数、API应用和API服务信息
-     *
-     * @param context     上下文对象，用于存储请求参数、API应用和API服务信息
-     * @param sendRequest 推送请求数据传输对象，包含推送所需的信息
      */
-    private void initContext(Context context, SendRequest sendRequest) {
+    private void initializeContext(Context context, SendRequest sendRequest) {
+        // 设置前置信息
+        setPre(context, sendRequest);
+
+        // 基础信息设置
+        context.setDirection(Const.Direction.SEND);
+        context.setRetryParams(JacksonUtil.toJson(sendRequest));
+        context.setParams(BeanUtil.beanToMap(sendRequest));
+        context.setInternalRetry(sendRequest.isInternalRetry());
+
+        // 设置应用和API信息
+        setApp(context, sendRequest.getAppCode());
+        setApi(context, sendRequest.getApiCode());
+
+        // 设置规则编码
+        App app = context.getApp();
+        Api api = context.getApi();
+        context.setRuleCode(app.getAppCode() + StrUtil.DASHED + api.getApiCode());
+
+        // 处理重试场景
+        handleRetryScenario(context, sendRequest);
+    }
+
+    /**
+     * 设置前置信息
+     */
+    private void setPre(Context context, SendRequest sendRequest) {
         Pre pre = new Pre();
         pre.setBizNo(sendRequest.getBizNo());
         context.setPre(pre);
-        context.setDirection(Const.Direction.SEND);
-        context.setRetryParams(JacksonUtil.toJson(sendRequest));
-        Map<String, Object> params = BeanUtil.beanToMap(sendRequest);
-        context.setParams(params);
-        App app = appMapper.selectByAppCode(sendRequest.getAppCode());
-        if (null == app) {
-            throw new ConvertException("【{}】应用未配置", sendRequest.getAppCode());
-        }
-        context.setApp(app);
-        // 对应接口处理
-        Api api = apiMapper.getApi(app.getId(), sendRequest.getApiCode());
-        if (null == api) {
-            throw new ConvertException("【{}】接口未配置", sendRequest.getApiCode());
-        }
-        context.setApi(api);
-        context.setRuleCode(app.getAppCode() + StrUtil.DASHED + api.getApiCode());
-        context.setInternalRetry(sendRequest.isInternalRetry());
+    }
+
+    /**
+     * 处理重试场景
+     */
+    private void handleRetryScenario(Context context, SendRequest sendRequest) {
         if (context.isInternalRetry()) {
             String reqMsg = sendRequest.getRequestBody();
             context.setReqMsg(reqMsg);
-            if (Const.MessageFormat.FORM.equals(api.getMessageFormat())) {
-                context.setTarget(JSONUtil.parseObj(reqMsg));
-            }
+
+            Optional.ofNullable(context.getApi())
+                    .filter(api -> Const.MessageFormat.FORM.equals(api.getMessageFormat()))
+                    .ifPresent(api -> context.setTarget(JSONUtil.parseObj(reqMsg)));
         }
     }
 
     /**
-     * 解析响应消息
-     * 此方法用于解析响应消息，根据API服务的消息类型（XML或JSON）进行解析
-     *
-     * @param context 上下文对象，用于获取API服务的消息类型
-     * @return Map 解析后的响应消息，以键值对的形式返回
+     * 处理发送请求
      */
-    public Map<String, Object> parseRsp(Context context) {
-        List<RuleMapping> rules = ruleMapper.getMappingRulesByRuleCode(Const.RuleType.RSP, context.getRuleCode());
-        if (CollUtil.isEmpty(rules)) {
-            log.warn("没有找到响应映射规则：{}", context.getRuleCode());
-            return new HashMap<>(16);
+    private void processRequest(Context context) {
+        SendHandler sendHandler = determineWhichHandler(context);
+        sendHandler.handle(context);
+    }
+
+    /**
+     * 根据上下文获取发送处理器
+     */
+    private SendHandler determineWhichHandler(Context context) {
+        String handlerBeanName = Optional.ofNullable(context.getApi())
+                .map(Api::getHandlerClass)
+                .orElseThrow(() -> new ConvertException("处理器配置不能为空"));
+
+        try {
+            return SpringUtil.getBean(StrUtil.lowerFirst(handlerBeanName));
+        } catch (NoSuchBeanDefinitionException e) {
+            return handleHandlerNotFound(context, handlerBeanName, e);
         }
-        Api api = context.getApi();
+    }
+
+    /**
+     * 处理处理器未找到的情况
+     */
+    private SendHandler handleHandlerNotFound(Context context, String handlerBeanName, NoSuchBeanDefinitionException e) {
+        if (context.isInternalRetry()) {
+            // TODO 重试临时添加，后续迁移需要删除
+            log.warn("未找到处理器：{}，使用默认处理器", handlerBeanName);
+            return SpringUtil.getBean(DefaultSendHandler.class);
+        }
+
+        log.error("处理器不存在：{}", handlerBeanName);
+        throw new ConvertException("处理器不存在: " + handlerBeanName);
+    }
+
+    /**
+     * 设置应用信息
+     */
+    private void setApp(Context context, String appCode) {
+        App app;
+        try {
+            app = appMapper.selectByAppCode(appCode);
+        } catch (Exception e) {
+            log.error("查询应用信息失败，appCode: {}, 错误信息: {}", appCode, e.getMessage(), e);
+            throw new ConvertException(ResultCode.APP_QUERY_ERROR);
+        }
+
+        if (app == null) {
+            throw new ConvertException("应用不存在，请确认是否已配置！应用编码: {}", appCode);
+        }
+
+        context.setApp(app);
+    }
+
+    /**
+     * 设置API服务信息
+     */
+    private void setApi(Context context, String apiCode) {
+        App app = Optional.ofNullable(context.getApp())
+                .orElseThrow(() -> new ConvertException(ResultCode.APP_NOT_FOUND));
+
+        Api api;
+        try {
+            api = apiMapper.getApi(app.getId(), apiCode);
+        } catch (Exception e) {
+            log.error("查询接口配置失败，appId: {}, apiCode: {}, 错误信息: {}", app.getId(), apiCode, e.getMessage(), e);
+            throw new ConvertException(ResultCode.API_QUERY_ERROR);
+        }
+
+        if (api == null) {
+            throw new ConvertException("接口配置不存在，请确认是否已配置！接口编码: {}", apiCode);
+        }
+
+        context.setApi(api);
+    }
+
+    /**
+     * 解析响应消息
+     */
+    public Map<String, Object> parseResponse(Context context) {
+        // 获取响应映射规则
+        List<RuleMapping> rules = getResponseRules(context);
+        if (CollUtil.isEmpty(rules)) {
+            log.debug("没有找到响应映射规则：{}，返回空响应", context.getRuleCode());
+            return new HashMap<>(DEFAULT_MAP_CAPACITY);
+        }
+
+        // 解析响应报文
+        Map<String, Object> rspMap = parseResponseMessage(context);
+
+        // 应用映射规则
+        return convertor.parseMappingRules(rspMap, rules);
+    }
+
+    /**
+     * 获取响应映射规则
+     */
+    private List<RuleMapping> getResponseRules(Context context) {
+        try {
+            return ruleMapper.getMappingRulesByRuleCode(Const.RuleType.RSP, context.getRuleCode());
+        } catch (Exception e) {
+            log.error("查询响应映射规则失败，ruleCode: {}, 错误信息: {}", context.getRuleCode(), e.getMessage(), e);
+            throw new ConvertException("查询响应映射规则失败");
+        }
+    }
+
+    /**
+     * 解析响应报文
+     */
+    private Map<String, Object> parseResponseMessage(Context context) {
+        Api api = Optional.ofNullable(context.getApi())
+                .orElseThrow(() -> new ConvertException("API信息不存在"));
+
+        String rspMsg = Optional.ofNullable(context.getRspMsg())
+                .orElseThrow(() -> new ConvertException("响应报文不能为空"));
+
         String messageFormat = api.getMessageFormat();
-        Map<String, Object> rspMap;
-        String rspMsg = context.getRspMsg();
+
         try {
             if (Const.MessageFormat.XML.equals(messageFormat)) {
-                rspMap = XmlUtil.xmlToMap(rspMsg);
+                return XmlUtil.xmlToMap(rspMsg);
             } else {
-                rspMap = JSONUtil.parseObj(rspMsg);
+                return parseJsonResponse(rspMsg);
             }
         } catch (Exception e) {
-            log.error("响应报文格式不正确：{}", e.getMessage(), e);
+            log.error("响应报文解析失败，format: {}, message: {}, 错误信息: {}",
+                    messageFormat, rspMsg, e.getMessage(), e);
             throw new ConvertException("响应报文格式不正确");
         }
-        return convertor.parseMappingRules(rspMap, rules);
+    }
+
+    /**
+     * 解析JSON响应
+     */
+    private Map<String, Object> parseJsonResponse(String rspMsg) {
+        try {
+            if (JSONUtil.isTypeJSONObject(rspMsg)) {
+                return JSONUtil.parseObj(rspMsg);
+            } else if (JSONUtil.isTypeJSONArray(rspMsg)) {
+                // TODO: 处理JSON数组场景
+                log.debug("收到JSON数组格式的响应消息");
+                return new HashMap<>();
+            } else {
+                throw new ConvertException("响应报文不是有效的JSON格式");
+            }
+        } catch (Exception e) {
+            log.error("JSON响应解析失败: {}", e.getMessage(), e);
+            throw new ConvertException("响应报文JSON格式不正确");
+        }
     }
 }

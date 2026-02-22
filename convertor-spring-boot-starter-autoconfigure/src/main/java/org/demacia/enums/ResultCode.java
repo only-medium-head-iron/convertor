@@ -16,18 +16,18 @@ public enum ResultCode {
 
     // 请求相关 (1000-1999)
     INVALID_REQUEST("1000", "无效请求"),
-    API_CODE_REQUIRED("1001", "API编码不能为空"),
+    API_CODE_REQUIRED("1001", "接口编码不能为空"),
     APP_CODE_REQUIRED("1002", "应用编码不能为空"),
     INVALID_MESSAGE_FORMAT("1003", "无效的消息格式"),
     REQUEST_VALIDATION_FAILED("1004", "请求验证失败"),
 
     // 应用相关 (2000-2999)
-    APP_NOT_FOUND("2000", "应用不存在"),
-    APP_QUERY_ERROR("2001", "查询应用失败"),
+    APP_NOT_FOUND("2000", "应用配置不存在"),
+    APP_QUERY_ERROR("2001", "查询应用配置失败"),
 
     // API相关 (3000-3999)
-    API_NOT_FOUND("3000", "API不存在"),
-    API_QUERY_ERROR("3001", "查询API失败"),
+    API_NOT_FOUND("3000", "接口不存在"),
+    API_QUERY_ERROR("3001", "查询接口配置失败"),
 
     // 处理器相关 (4000-4999)
     HANDLER_NOT_FOUND("4000", "处理器不存在"),
